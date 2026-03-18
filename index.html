@@ -193,11 +193,11 @@
                     found++;
                     html += `<div class="lehrer-box">${l.fokus ? `<div class="class-badge">${l.fokus}</div>` : ""}
                         <b style="font-size:1.5rem">${l.name}</b><br>
-                        <small style="color:var(--highlight); font-weight:bold">PRÄSENT</small>
+                        <small style="color:var(--highlight); font-weight:bold"></small>
                     </div>`;
                 }
             });
-            area.innerHTML = (found === 0 ? html + `<div style="font-size:2rem; opacity:0.3">Aktuell keine Lehrkräfte markiert.</div>` : html) + `</div></div>`;
+            area.innerHTML = (found === 0 ? html + `<div style="font-size:2rem; opacity:0.3">Aktuell keine Lehrkräfte im Haus.</div>` : html) + `</div></div>`;
         } 
         else { 
             const cid = views[step];
