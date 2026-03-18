@@ -69,8 +69,8 @@
     // ==========================================
     // ZEIT-MANIPULATION (NUR ZUM TESTEN)
     // ==========================================
-    const TEST_MODE = false;    // Auf 'true' setzen zum Testen
-    const TEST_TIME = "09:20"; // Wunschzeit
+    const TEST_MODE = true;    // Auf 'true' setzen zum Testen!
+    const TEST_TIME = "08:30"; // Wunschzeit (z.B. "08:30")
     const TEST_DAY  = 1;       // 1=Mo, 2=Di, 3=Mi, 4=Do, 5=Fr
     // ==========================================
 
@@ -96,35 +96,61 @@
         const now = new Date();
         let h, m, day;
 
+        // Zeit-Logik für Manipulation fixieren
         if (TEST_MODE) {
-            [h, m] = TEST_TIME.split(':').map(Number);
+            const parts = TEST_TIME.split(':');
+            h = parseInt(parts[0]);
+            m = parseInt(parts[1]);
             day = TEST_DAY;
         } else {
-            h = now.getHours(); m = now.getMinutes(); day = now.getDay();
+            h = now.getHours();
+            m = now.getMinutes();
+            day = now.getDay();
         }
         
         const curMin = h * 60 + m;
 
+        // Anzeige oben rechts
         document.getElementById('h-m').textContent = `${h.toString().padStart(2,'0')}:${m.toString().padStart(2,'0')}`;
         document.getElementById('sec').textContent = now.getSeconds().toString().padStart(2, '0');
-        document.getElementById('live-date').textContent = now.toLocaleDateString('de-DE', {weekday:'long', day:'2-digit', month:'long'});
+        
+        // Datumssimulation (falls Testmode)
+        if(TEST_MODE) {
+            const weekdays = ["Sonntag", "Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag"];
+            document.getElementById('live-date').textContent = `${weekdays[day]}, Test-Modus`;
+        } else {
+            document.getElementById('live-date').textContent = now.toLocaleDateString('de-DE', {weekday:'long', day:'2-digit', month:'long'});
+        }
+
         document.getElementById('info-content').textContent = SCHOOL_DATA.uliMessage || "";
 
+        // Aktuellen Slot finden
         let activeIdx = slots.findIndex(s => {
-            const [sh, sm] = s.s.split(':').map(Number);
-            const [eh, em] = s.e.split(':').map(Number);
-            return curMin >= (sh*60+sm) && curMin < (eh*60+em);
+            const sMin = parseInt(s.s.split(':')[0]) * 60 + parseInt(s.s.split(':')[1]);
+            const eMin = parseInt(s.e.split(':')[0]) * 60 + parseInt(s.e.split(':')[1]);
+            return curMin >= sMin && curMin < eMin;
         });
 
+        // Ticker Logik
         const ticker = document.getElementById('msg-ticker');
         ticker.classList.remove('urgent');
-        let next = slots.find(s => (s.s.split(':').map(Number)[0]*60 + s.s.split(':').map(Number)[1]) > curMin);
         
-        if(next && ((next.s.split(':').map(Number)[0]*60 + next.s.split(':').map(Number)[1]) - curMin) <= 5) {
-            ticker.textContent = `Nächste Stunde in ${ (next.s.split(':').map(Number)[0]*60 + next.s.split(':').map(Number)[1]) - curMin } Min`;
-            ticker.classList.add('urgent');
+        let nextSlot = slots.find(s => {
+            const sMin = parseInt(s.s.split(':')[0]) * 60 + parseInt(s.s.split(':')[1]);
+            return sMin > curMin;
+        });
+        
+        if(nextSlot) {
+            const nextMin = parseInt(nextSlot.s.split(':')[0]) * 60 + parseInt(nextSlot.s.split(':')[1]);
+            const diff = nextMin - curMin;
+            if(diff <= 5) {
+                ticker.textContent = `Nächste Stunde in ${diff} Min`;
+                ticker.classList.add('urgent');
+            } else {
+                ticker.textContent = activeIdx !== -1 ? (slots[activeIdx].label || `Stunde bis ${slots[activeIdx].e}`) : "Pause / Standby";
+            }
         } else {
-            ticker.textContent = activeIdx !== -1 ? (slots[activeIdx].label || `Aktuelle Stunde bis ${slots[activeIdx].e}`) : "Pause / Standby";
+            ticker.textContent = activeIdx !== -1 ? (slots[activeIdx].label || `Stunde bis ${slots[activeIdx].e}`) : "Schulschluss / Standby";
         }
 
         render(activeIdx, day, curMin);
@@ -158,9 +184,9 @@
                 let isHereNow = false;
                 if(l.zeiten && l.zeiten[today]) {
                     l.zeiten[today].forEach(schicht => {
-                        const [sH, sM] = schicht[0].split(':').map(Number);
-                        const [eH, eM] = schicht[1].split(':').map(Number);
-                        if(curMin >= (sH*60+sM) && curMin < (eH*60+eM)) isHereNow = true;
+                        const sMin = parseInt(schicht[0].split(':')[0]) * 60 + parseInt(schicht[0].split(':')[1]);
+                        const eMin = parseInt(schicht[1].split(':')[0]) * 60 + parseInt(schicht[1].split(':')[1]);
+                        if(curMin >= sMin && curMin < eMin) isHereNow = true;
                     });
                 }
                 if(isHereNow) {
@@ -193,6 +219,7 @@
         }
     }
 
+    // Slide-Wechsel alle 10 Sekunden
     setInterval(() => {
         step = (step + 1) % views.length;
         const area = document.getElementById('content-area');
@@ -200,8 +227,13 @@
         update();
     }, 10000);
 
+    // Live-Update jede Sekunde (für Sekundenanzeige)
     setInterval(update, 1000);
+    
+    // Daten laden beim Start
     fetchData().then(update);
+    
+    // JSON alle 30 Sek neu laden
     setInterval(fetchData, 30000);
 </script>
 </body>
