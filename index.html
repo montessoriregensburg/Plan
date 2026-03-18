@@ -62,7 +62,7 @@
 
 <script>
     const TEST_MODE = true; 
-    const TEST_TIME = "10:30"; 
+    const TEST_TIME = "10:24"; 
     const TEST_DAY  = 1; 
 
     let SCHOOL_DATA = { uliMessage: "", lehrerPlan: [], fullSchedules: {} };
@@ -103,13 +103,35 @@
 
         const ticker = document.getElementById('msg-ticker');
         ticker.classList.remove('urgent');
+        
+        // Suche den nächsten Slot
         let next = slots.find(s => (parseInt(s.s.split(':')[0])*60 + parseInt(s.s.split(':')[1])) > curMin);
         
-        if(next && ((parseInt(next.s.split(':')[0])*60 + parseInt(next.s.split(':')[1])) - curMin) <= 5) {
-            ticker.textContent = `Nächste Stunde in ${ (parseInt(next.s.split(':')[0])*60 + parseInt(next.s.split(':')[1])) - curMin } Min`;
-            ticker.classList.add('urgent');
+        if(next) {
+            const nextStartMin = parseInt(next.s.split(':')[0])*60 + parseInt(next.s.split(':')[1]);
+            const diff = nextStartMin - curMin;
+
+            // Check ob in 5 Minuten ein Impuls startet (Feld nicht leer)
+            let hasImpulse = false;
+            if(diff <= 5 && !next.label) {
+                [10,11,12].forEach(cid => {
+                    if(SCHOOL_DATA.fullSchedules[cid] && 
+                       SCHOOL_DATA.fullSchedules[cid][day] && 
+                       SCHOOL_DATA.fullSchedules[cid][day][next.s] &&
+                       SCHOOL_DATA.fullSchedules[cid][day][next.s].trim() !== "") {
+                        hasImpulse = true;
+                    }
+                });
+            }
+
+            if(diff <= 5 && hasImpulse) {
+                ticker.textContent = `Impuls startet in ${diff} Min`;
+                ticker.classList.add('urgent');
+            } else {
+                ticker.textContent = activeIdx !== -1 ? (slots[activeIdx].label || `Stunde bis ${slots[activeIdx].e}`) : "Pause / Standby";
+            }
         } else {
-            ticker.textContent = activeIdx !== -1 ? (slots[activeIdx].label || `Stunde bis ${slots[activeIdx].e}`) : "Pause / Standby";
+            ticker.textContent = activeIdx !== -1 ? (slots[activeIdx].label || `Stunde bis ${slots[activeIdx].e}`) : "Schulschluss";
         }
         render(activeIdx, day, curMin);
     }
@@ -141,18 +163,16 @@
             (SCHOOL_DATA.lehrerPlan || []).forEach(l => {
                 let currentFokus = "";
                 let isHere = false;
-
                 if(l.zeiten && l.zeiten[today]) {
                     l.zeiten[today].forEach(schicht => {
                         const sM = parseInt(schicht[0].split(':')[0])*60 + parseInt(schicht[0].split(':')[1]);
                         const eM = parseInt(schicht[1].split(':')[0])*60 + parseInt(schicht[1].split(':')[1]);
                         if(curMin >= sM && curMin < eM) {
                             isHere = true;
-                            currentFokus = schicht[2] || ""; // Fokus aus der Schicht holen
+                            currentFokus = schicht[2] || "";
                         }
                     });
                 }
-
                 if(isHere) {
                     found++;
                     html += `<div class="lehrer-box">
@@ -184,7 +204,13 @@
         }
     }
 
-    setInterval(() => { step = (step + 1) % views.length; update(); }, 10000);
+    setInterval(() => { 
+        step = (step + 1) % views.length; 
+        const area = document.getElementById('content-area');
+        area.classList.remove('fade'); void area.offsetWidth; area.classList.add('fade');
+        update(); 
+    }, 10000);
+    
     setInterval(update, 1000);
     fetchData().then(update);
     setInterval(fetchData, 30000);
