@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <title>Plan Admin - Editor</title>
+    <style>
+        body { font-family: 'Inter', sans-serif; background: #0f172a; color: white; padding: 40px; }
+        .card { background: #1e293b; padding: 30px; border-radius: 15px; max-width: 900px; margin: auto; box-shadow: 0 10px 25px rgba(0,0,0,0.5); }
+        h1 { color: #38bdf8; border-bottom: 2px solid #38bdf8; padding-bottom: 10px; margin-bottom: 30px; }
+        label { display: block; margin: 20px 0 5px; font-weight: bold; color: #94a3b8; }
+        input, textarea { width: 100%; padding: 12px; background: #0f172a; border: 1px solid #334155; color: white; border-radius: 8px; font-size: 1rem; }
+        textarea { height: 150px; resize: vertical; }
+        button { background: #38bdf8; color: #0f172a; border: none; padding: 15px 30px; border-radius: 8px; font-weight: bold; font-size: 1.1rem; cursor: pointer; margin-top: 30px; width: 100%; }
+        button:hover { background: #7dd3fc; }
+        #outputJson { background: #000; color: #22c55e; font-family: monospace; height: 150px; margin-top: 10px; }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <h1>Plan Konfigurator</h1>
+    
+    <label>Ticker (Header Mitte)</label>
+    <input type="text" id="uliMsg" placeholder="Kurze Nachricht...">
+
+    <label>Wichtige Informationen (Eigene Slide)</label>
+    <textarea id="infoText" placeholder="Schreibe hier längere Texte, Ankündigungen oder Termine rein..."></textarea>
+
+    <label>Lehrer (Format: Name|Fach|Klasse)</label>
+    <textarea id="lehrerInput" placeholder="Müller|Mathe|10&#10;Schmidt|Deutsch|12"></textarea>
+
+    <button onclick="generateJSON()">JSON-Code für data.json generieren</button>
+
+    <div style="margin-top: 30px;">
+        <label>Kopiere diesen Text komplett in deine data.json:</label>
+        <textarea id="outputJson" readonly></textarea>
+    </div>
+</div>
+
+<script>
+    function generateJSON() {
+        const uliMsg = document.getElementById('uliMsg').value;
+        const infoText = document.getElementById('infoText').value;
+        const lehrerLines = document.getElementById('lehrerInput').value.split('\n');
+        
+        const lehrerPlan = lehrerLines.filter(line => line.trim() !== "").map(line => {
+            const [name, fach, klasse] = line.split('|');
+            return {
+                name: name, fach: fach || "-",
+                zeiten: { "1": [["08:30","16:00", klasse||""]], "2": [["08:30","16:00", klasse||""]], "3": [["08:30","16:00", klasse||""]], "4": [["08:30","16:00", klasse||""]], "5": [["08:30","16:00", klasse||""]] }
+            };
+        });
+
+        const finalJson = {
+            uliMessage: uliMsg,
+            infoSlideText: infoText,
+            lehrerPlan: lehrerPlan,
+            fullSchedules: { "10": {}, "11": {}, "12": {} }
+        };
+
+        const out = document.getElementById('outputJson');
+        out.value = JSON.stringify(finalJson, null, 4);
+        out.select();
+    }
+</script>
+</body>
+</html>
