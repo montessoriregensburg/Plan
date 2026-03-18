@@ -23,7 +23,7 @@
   "fullSchedules": {
     "10": {
       "1": { "08:30": "Technik", "09:10": "Technik", "09:50": "Technik", "11:50": "Englisch", "13:00": "MITTAG" },
-      "2": { "08:30": "Mathe (S)", "10:30": "Deutsch", "11:50": "WiB", "13:00": "MITTAG" },
+      "2": { "08:30": "Mathe", "10:30": "Deutsch", "11:50": "WiB", "13:00": "MITTAG" },
       "3": { "09:50": "Sport", "10:30": "Sport", "11:50": "Ethik", "13:00": "MITTAG", "13:40": "Deutsch" },
       "4": { "08:30": "Mathe", "09:50": "GPG", "13:00": "MITTAG" },
       "5": { "08:30": "Englisch", "10:30": "NuT", "13:00": "MITTAG" }
