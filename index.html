@@ -13,41 +13,27 @@
         }
         * { box-sizing: border-box; cursor: none; font-family: 'Inter', 'Segoe UI', sans-serif; }
         body { background: var(--bg); color: var(--text); margin: 0; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
-        
         header { display: flex; justify-content: space-between; align-items: center; padding: 0 40px; background: var(--panel); border-bottom: 4px solid var(--accent); height: 120px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); z-index: 10; }
         .live-time { font-size: 5rem; font-weight: 800; font-variant-numeric: tabular-nums; letter-spacing: -2px; }
         .seconds { font-size: 2rem; color: var(--accent); margin-left: 5px; opacity: 0.7; }
-        
         .info-card { background: linear-gradient(135deg, var(--info-color), #7e22ce); padding: 18px; border-radius: 15px; border-left: 8px solid #fff; min-width: 450px; box-shadow: 0 10px 20px rgba(0,0,0,0.2); }
-
-        #msg-ticker { background: var(--accent); color: var(--bg); font-size: 2.2rem; font-weight: 900; text-align: center; height: 80px; display: flex; align-items: center; justify-content: center; text-transform: uppercase; letter-spacing: 1px; transition: background-color 0.5s; }
+        #msg-ticker { background: var(--accent); color: var(--bg); font-size: 2.2rem; font-weight: 900; text-align: center; height: 80px; display: flex; align-items: center; justify-content: center; text-transform: uppercase; letter-spacing: 1px; }
         .urgent { background: var(--warning) !important; color: white !important; }
-
         main { flex: 1; padding: 30px; background: radial-gradient(circle at center, #1e293b 0%, #0f172a 100%); }
-        
         table { width: 100%; height: 100%; border-collapse: separate; border-spacing: 5px; table-layout: fixed; }
         th { background: var(--glass); color: var(--accent); font-size: 1.2rem; text-transform: uppercase; padding: 8px; border-radius: 8px; }
         td { background: var(--glass); border-radius: 8px; text-align: center; font-size: 1.2rem; border: 1px solid rgba(255,255,255,0.05); }
-        
-        .active-cell { 
-            background: var(--highlight) !important; 
-            color: white !important; 
-            font-weight: 900; 
-            border: 2px solid #fff !important;
-        }
-
+        .active-cell { background: var(--highlight) !important; color: white !important; font-weight: 900; border: 2px solid #fff !important; }
         .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; height: 100%; }
         .big-card { background: var(--panel); border-radius: 20px; padding: 30px; display: flex; flex-direction: column; align-items: center; justify-content: center; border-top: 12px solid var(--accent); text-align: center; height: 100%; }
-        
         .lehrer-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; width: 100%; margin-top: 20px; }
         .lehrer-box { background: var(--glass); border-left: 8px solid var(--highlight); padding: 20px; border-radius: 15px; position: relative; }
         .class-badge { position: absolute; top: 8px; right: 10px; background: var(--accent); color: var(--bg); padding: 2px 8px; border-radius: 5px; font-size: 0.9rem; font-weight: 900; }
-
         .fade { animation: fadeIn 0.5s ease-out; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
     </style>
 </head>
-<body onclick="document.documentElement.requestFullscreen()">
+<body>
 
 <header>
     <div>
@@ -56,7 +42,7 @@
     </div>
     <div class="info-card">
         <small style="text-transform: uppercase; font-weight: 900; opacity: 0.8; font-size: 0.7rem;">Informationen</small>
-        <div id="info-content" style="font-size: 1.5rem; font-weight: 600; margin-top: 4px;">Lade Daten...</div>
+        <div id="info-content" style="font-size: 1.5rem; font-weight: 600; margin-top: 4px;">Lade...</div>
     </div>
     <div class="live-time"><span id="h-m">00:00</span><span id="sec" class="seconds">00</span></div>
 </header>
@@ -66,14 +52,11 @@
 <main id="content-area" class="fade"></main>
 
 <script>
-    // ==========================================
-    // ZEIT-MANIPULATION (NUR ZUM TESTEN)
-    // ==========================================
-    const TEST_MODE = true;    // Auf 'true' setzen zum Testen!
-    const TEST_TIME = "08:30"; // Wunschzeit (z.B. "08:30")
-    const TEST_DAY  = 1;       // 1=Mo, 2=Di, 3=Mi, 4=Do, 5=Fr
-    // ==========================================
-
+   // --------------------------------------
+    const TEST_MODE = true; 
+    const TEST_TIME = "08:30"; 
+    const TEST_DAY  = 1; 
+//---------------------------------------------
     let SCHOOL_DATA = { uliMessage: "", lehrerPlan: [], fullSchedules: {} };
     const slots = [
         { s: "08:30", e: "09:00" }, { s: "09:10", e: "09:40" }, { s: "09:50", e: "10:20" }, 
@@ -89,70 +72,37 @@
         try {
             const resp = await fetch('data.json?t=' + Date.now());
             SCHOOL_DATA = await resp.json();
-        } catch (e) { console.error("Datenfehler"); }
+        } catch (e) { console.error("Fehler beim Laden"); }
     }
 
     function update() {
         const now = new Date();
         let h, m, day;
-
-        // Zeit-Logik für Manipulation fixieren
-        if (TEST_MODE) {
-            const parts = TEST_TIME.split(':');
-            h = parseInt(parts[0]);
-            m = parseInt(parts[1]);
-            day = TEST_DAY;
-        } else {
-            h = now.getHours();
-            m = now.getMinutes();
-            day = now.getDay();
-        }
+        if (TEST_MODE) { [h, m] = TEST_TIME.split(':').map(Number); day = TEST_DAY; } 
+        else { h = now.getHours(); m = now.getMinutes(); day = now.getDay(); }
         
         const curMin = h * 60 + m;
-
-        // Anzeige oben rechts
         document.getElementById('h-m').textContent = `${h.toString().padStart(2,'0')}:${m.toString().padStart(2,'0')}`;
         document.getElementById('sec').textContent = now.getSeconds().toString().padStart(2, '0');
-        
-        // Datumssimulation (falls Testmode)
-        if(TEST_MODE) {
-            const weekdays = ["Sonntag", "Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag"];
-            document.getElementById('live-date').textContent = `${weekdays[day]}, Test-Modus`;
-        } else {
-            document.getElementById('live-date').textContent = now.toLocaleDateString('de-DE', {weekday:'long', day:'2-digit', month:'long'});
-        }
-
+        document.getElementById('live-date').textContent = now.toLocaleDateString('de-DE', {weekday:'long', day:'2-digit', month:'long'});
         document.getElementById('info-content').textContent = SCHOOL_DATA.uliMessage || "";
 
-        // Aktuellen Slot finden
         let activeIdx = slots.findIndex(s => {
             const sMin = parseInt(s.s.split(':')[0]) * 60 + parseInt(s.s.split(':')[1]);
             const eMin = parseInt(s.e.split(':')[0]) * 60 + parseInt(s.e.split(':')[1]);
             return curMin >= sMin && curMin < eMin;
         });
 
-        // Ticker Logik
         const ticker = document.getElementById('msg-ticker');
         ticker.classList.remove('urgent');
+        let next = slots.find(s => (parseInt(s.s.split(':')[0])*60 + parseInt(s.s.split(':')[1])) > curMin);
         
-        let nextSlot = slots.find(s => {
-            const sMin = parseInt(s.s.split(':')[0]) * 60 + parseInt(s.s.split(':')[1]);
-            return sMin > curMin;
-        });
-        
-        if(nextSlot) {
-            const nextMin = parseInt(nextSlot.s.split(':')[0]) * 60 + parseInt(nextSlot.s.split(':')[1]);
-            const diff = nextMin - curMin;
-            if(diff <= 5) {
-                ticker.textContent = `Nächste Stunde in ${diff} Min`;
-                ticker.classList.add('urgent');
-            } else {
-                ticker.textContent = activeIdx !== -1 ? (slots[activeIdx].label || `Stunde bis ${slots[activeIdx].e}`) : "Pause / Standby";
-            }
+        if(next && ((parseInt(next.s.split(':')[0])*60 + parseInt(next.s.split(':')[1])) - curMin) <= 5) {
+            ticker.textContent = `Nächste Stunde in ${ (parseInt(next.s.split(':')[0])*60 + parseInt(next.s.split(':')[1])) - curMin } Min`;
+            ticker.classList.add('urgent');
         } else {
-            ticker.textContent = activeIdx !== -1 ? (slots[activeIdx].label || `Stunde bis ${slots[activeIdx].e}`) : "Schulschluss / Standby";
+            ticker.textContent = activeIdx !== -1 ? (slots[activeIdx].label || `Stunde bis ${slots[activeIdx].e}`) : "Pause / Standby";
         }
-
         render(activeIdx, day, curMin);
     }
 
@@ -181,23 +131,25 @@
                 <div class="lehrer-grid">`;
             let found = 0;
             (SCHOOL_DATA.lehrerPlan || []).forEach(l => {
-                let isHereNow = false;
+                let isHere = false;
                 if(l.zeiten && l.zeiten[today]) {
                     l.zeiten[today].forEach(schicht => {
-                        const sMin = parseInt(schicht[0].split(':')[0]) * 60 + parseInt(schicht[0].split(':')[1]);
-                        const eMin = parseInt(schicht[1].split(':')[0]) * 60 + parseInt(schicht[1].split(':')[1]);
-                        if(curMin >= sMin && curMin < eMin) isHereNow = true;
+                        const sM = parseInt(schicht[0].split(':')[0])*60 + parseInt(schicht[0].split(':')[1]);
+                        const eM = parseInt(schicht[1].split(':')[0])*60 + parseInt(schicht[1].split(':')[1]);
+                        if(curMin >= sM && curMin < eM) isHere = true;
                     });
                 }
-                if(isHereNow) {
+                if(isHere) {
                     found++;
-                    html += `<div class="lehrer-box">${l.fokus ? `<div class="class-badge">${l.fokus}</div>` : ""}
-                        <b style="font-size:1.5rem">${l.name}</b><br>
-                        <small style="color:var(--highlight); font-weight:bold"></small>
+                    const lehrerFach = l.fach ? l.fach : "";
+                    html += `<div class="lehrer-box">
+                        ${l.fokus ? `<div class="class-badge">${l.fokus}</div>` : ""}
+                        <b style="font-size: 1.6rem; display: block; margin-bottom: 5px;">${l.name}</b>
+                        <div style="color: var(--accent); font-weight: 600; font-size: 1.1rem; text-transform: uppercase; letter-spacing: 1px;">${lehrerFach}</div>
                     </div>`;
                 }
             });
-            area.innerHTML = (found === 0 ? html + `<div style="font-size:2rem; opacity:0.3">Aktuell keine Lehrkräfte im Haus.</div>` : html) + `</div></div>`;
+            area.innerHTML = (found === 0 ? html + `<div style="font-size:2rem; opacity:0.3">Keine Lehrkräfte im Haus.</div>` : html) + `</div></div>`;
         } 
         else { 
             const cid = views[step];
@@ -219,21 +171,9 @@
         }
     }
 
-    // Slide-Wechsel alle 10 Sekunden
-    setInterval(() => {
-        step = (step + 1) % views.length;
-        const area = document.getElementById('content-area');
-        area.classList.remove('fade'); void area.offsetWidth; area.classList.add('fade');
-        update();
-    }, 10000);
-
-    // Live-Update jede Sekunde (für Sekundenanzeige)
+    setInterval(() => { step = (step + 1) % views.length; update(); }, 10000);
     setInterval(update, 1000);
-    
-    // Daten laden beim Start
     fetchData().then(update);
-    
-    // JSON alle 30 Sek neu laden
     setInterval(fetchData, 30000);
 </script>
 </body>
