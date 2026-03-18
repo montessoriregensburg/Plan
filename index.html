@@ -64,9 +64,10 @@
 <main id="content-area" class="fade"></main>
 
 <script>
+    // TEST_MODE: true zum Testen. TEST_DAY: 5 = Freitag, 0 = Sonntag etc.
     const TEST_MODE = false; 
     const TEST_TIME = "16:00"; 
-    const TEST_DAY  = 3; // 1=Mo...5=Fr
+    const TEST_DAY  = 5; 
 
     let SCHOOL_DATA = { uliMessage: "", lehrerPlan: [], fullSchedules: {} };
     const slots = [
@@ -91,23 +92,24 @@
         return h * 60 + m;
     }
 
-    // Such-Logik für den nächsten Impuls (Tagübergreifend)
     function getNextImpulse(classId, currentDay, currentMin) {
         let checkDay = currentDay;
         let checkMin = currentMin;
         
-        // Suche für die nächsten 7 Tage (um Wochenende zu überbrücken)
-        for (let i = 0; i < 7; i++) {
-            if (checkDay > 5) { checkDay = 1; checkMin = 0; } // Springe zu Montag
+        for (let i = 0; i < 8; i++) { // Wir prüfen bis zu 8 Tage voraus
+            // Wenn Tag > 5 (Freitag) oder Tag == 0 (Sonntag), springe weiter Richtung Montag
+            if (checkDay > 5 || checkDay === 0) { 
+                checkDay = 1; 
+                checkMin = 0; 
+                // i wird in der Schleife weitergezählt, was den dayOffset erhöht
+            }
             
             const dayPlan = SCHOOL_DATA.fullSchedules[classId]?.[checkDay];
             if (dayPlan) {
-                // Alle Slots sortieren
                 const sortedSlots = slots.filter(s => !s.label).sort((a,b) => timeToMin(a.s) - timeToMin(b.s));
-                
                 for (let slot of sortedSlots) {
                     const slotStart = timeToMin(slot.s);
-                    // Nur Slots in der Zukunft berücksichtigen
+                    // Am "i == 0" Tag (heute) nur zukünftige Slots
                     if (i === 0 && slotStart <= checkMin) continue;
                     
                     const fach = dayPlan[slot.s];
@@ -116,8 +118,8 @@
                     }
                 }
             }
-            checkDay++;
-            checkMin = 0; // Am nächsten Tag fangen wir morgens an
+            checkDay = (checkDay + 1) % 7;
+            checkMin = 0;
         }
         return null;
     }
@@ -171,20 +173,26 @@
                 let content = "";
                 
                 if (next) {
-                    const days = ["", "Mo", "Di", "Mi", "Do", "Fr"];
+                    const days = ["So", "Mo", "Di", "Mi", "Do", "Fr", "Sa"];
                     const dayLabel = next.dayOffset === 0 ? "Heute" : (next.dayOffset === 1 ? "Morgen" : days[next.day]);
                     
-                    // Berechne Countdown in Minuten
+                    // Korrekte Berechnung der Differenz unter Berücksichtigung der 24h pro Tag Differenz
                     let totalDiffMin = (next.dayOffset * 24 * 60) + (timeToMin(next.time) - curMin);
-                    let hours = Math.floor(totalDiffMin / 60);
-                    let minutes = totalDiffMin % 60;
-                    let countdown = hours > 0 ? `${hours}h ${minutes}m` : `${minutes}m`;
+                    
+                    let d = Math.floor(totalDiffMin / (24 * 60));
+                    let h = Math.floor((totalDiffMin % (24 * 60)) / 60);
+                    let m = totalDiffMin % 60;
+
+                    let countdown = "";
+                    if(d > 0) countdown += `${d}d `;
+                    if(h > 0 || d > 0) countdown += `${h}h `;
+                    countdown += `${m}m`;
 
                     content = `
                         <div class="next-label">Nächster Impuls (${dayLabel})</div>
                         <div style="font-size:1.5rem; opacity:0.8; margin-bottom:10px;">${next.time} Uhr</div>
                         <div style="font-size:3.5rem; color:var(--accent); font-weight:900; line-height:1.1">${next.fach}</div>
-                        <div class="timer-box">T- ${countdown}</div>
+                        <div class="timer-box" style="${d > 0 ? 'color:var(--pause); border-color:var(--pause);' : ''}">T- ${countdown}</div>
                     `;
                 } else {
                     content = `<div style="opacity:0.3; font-size:1.5rem;">Keine weiteren Impulse geplant</div>`;
