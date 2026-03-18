@@ -2,7 +2,8 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-    <title>Schul-Display JSON-ULTIMATE</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Schul-Display ULTIMATE LIVE</title>
     <style>
         :root {
             --bg: #0f172a; --panel: #1e293b; --text: #f8fafc;
@@ -10,66 +11,62 @@
             --warning: #ef4444; --pause: #f59e0b; --uli: #a855f7;
         }
         * { box-sizing: border-box; cursor: none; }
-        body { background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; margin: 0; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+        body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', sans-serif; margin: 0; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
         
-        header { display: flex; justify-content: space-between; align-items: center; padding: 10px 40px; background: var(--panel); border-bottom: 4px solid var(--accent); height: 110px; }
-        .live-time { font-size: 4rem; font-weight: 800; font-variant-numeric: tabular-nums; line-height: 1; }
-        .seconds { font-size: 1.8rem; color: var(--accent); margin-left: 5px; }
-        .uli-card { background: var(--uli); padding: 12px; border-radius: 10px; border-left: 6px solid white; min-width: 350px; }
+        /* Header */
+        header { display: flex; justify-content: space-between; align-items: center; padding: 10px 40px; background: var(--panel); border-bottom: 4px solid var(--accent); height: 115px; }
+        .live-time { font-size: 4.5rem; font-weight: 800; font-variant-numeric: tabular-nums; line-height: 1; }
+        .seconds { font-size: 2rem; color: var(--accent); margin-left: 5px; }
+        .uli-card { background: var(--uli); padding: 15px; border-radius: 12px; border-left: 8px solid white; min-width: 400px; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
 
-        #msg-ticker { background: var(--accent); color: var(--bg); padding: 10px; font-size: 1.8rem; font-weight: bold; text-align: center; height: 60px; display: flex; align-items: center; justify-content: center; text-transform: uppercase; }
+        /* Impuls Ticker */
+        #msg-ticker { background: var(--accent); color: var(--bg); padding: 10px; font-size: 2rem; font-weight: bold; text-align: center; height: 70px; display: flex; align-items: center; justify-content: center; text-transform: uppercase; transition: 0.5s; }
         .urgent { background: var(--warning) !important; color: white !important; animation: blink 1s infinite; }
-        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.6; } }
+        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.7; } }
 
-        main { flex: 1; padding: 20px; }
+        main { flex: 1; padding: 25px; position: relative; }
         #content-area { height: 100%; width: 100%; }
-        .fade { animation: fadeIn 0.4s ease-out; }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
-        /* Layout Elemente */
+        /* Card & Grid Designs */
         .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; height: 100%; }
-        .big-card { background: var(--panel); border-radius: 20px; padding: 20px; display: flex; flex-direction: column; align-items: center; justify-content: center; border-top: 10px solid var(--accent); text-align: center; }
-        .lehrer-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; width: 100%; margin-top: 15px; }
-        .lehrer-box { background: rgba(255,255,255,0.05); padding: 10px; border-radius: 8px; border-left: 4px solid var(--highlight); }
-        
-        table { width: 100%; height: 100%; border-collapse: collapse; background: var(--panel); table-layout: fixed; border-radius: 15px; overflow: hidden; }
-        th { background: #334155; color: var(--accent); padding: 8px; font-size: 1.1rem; }
-        td { border: 1px solid #334155; text-align: center; font-size: 1rem; }
-        
-        /* Die wichtige Hervorhebung */
-        .active-cell { 
-            background: var(--highlight) !important; 
-            color: white !important; 
-            font-weight: 900; 
-            border: 4px solid #fff !important;
-            transform: scale(1.02);
-            z-index: 10;
-            box-shadow: 0 0 15px rgba(34, 197, 94, 0.5);
-        }
+        .big-card { background: var(--panel); border-radius: 20px; padding: 30px; display: flex; flex-direction: column; align-items: center; justify-content: center; border-top: 12px solid var(--accent); text-align: center; height: 100%; }
+        .lehrer-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; width: 100%; margin-top: 20px; }
+        .lehrer-box { background: rgba(255,255,255,0.05); padding: 15px; border-radius: 10px; border-left: 5px solid gray; text-align: left; }
+
+        /* Table Design */
+        table { width: 100%; height: 100%; border-collapse: collapse; background: var(--panel); table-layout: fixed; border-radius: 20px; overflow: hidden; }
+        th { background: #334155; color: var(--accent); padding: 12px; font-size: 1.3rem; }
+        td { border: 1px solid #334155; text-align: center; font-size: 1.2rem; transition: 0.3s; }
+        .active-cell { background: var(--highlight) !important; color: white !important; font-weight: 900; border: 5px solid #fff !important; box-shadow: inset 0 0 20px rgba(0,0,0,0.3); }
+
+        .fade { animation: fadeIn 0.5s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
-<body onclick="if(!document.fullscreenElement) document.documentElement.requestFullscreen();">
+<body onclick="document.documentElement.requestFullscreen()">
 
 <header>
     <div>
-        <div id="view-label" style="background:var(--accent); color:var(--bg); padding:4px 12px; border-radius:4px; font-weight:900; margin-bottom:4px; display:inline-block; font-size:0.9rem;">MODUS</div>
-        <div id="live-date" style="font-size: 1.2rem; opacity: 0.8;">---</div>
+        <div id="view-label" style="background:var(--accent); color:var(--bg); padding:5px 15px; border-radius:5px; font-weight:900; margin-bottom:5px; display:inline-block; text-transform: uppercase;">MODUS</div>
+        <div id="live-date" style="font-size: 1.5rem; opacity: 0.8;">---</div>
     </div>
     <div class="uli-card">
-        <small style="text-transform: uppercase; font-weight: 800; opacity: 0.7; font-size: 0.7rem;">Nachrichten Uli</small>
-        <div id="uli-content" style="font-size: 1.1rem; font-weight: bold;">Lade...</div>
+        <small style="text-transform: uppercase; font-weight: 800; opacity: 0.8; font-size: 0.8rem;">Nachrichten Uli</small>
+        <div id="uli-content" style="font-size: 1.3rem; font-weight: bold; margin-top: 5px;">Lade Daten...</div>
     </div>
-    <div class="live-time"><span id="h-m">00:00</span><span id="sec" class="seconds">00</span></div>
+    <div class="live-time">
+        <span id="h-m">00:00</span><span id="sec" class="seconds">00</span>
+    </div>
 </header>
 
-<div id="msg-ticker">Initialisiere Display...</div>
+<div id="msg-ticker">Initialisiere...</div>
 
 <main>
     <div id="content-area" class="fade"></div>
 </main>
 
 <script>
-    let SCHOOL_DATA = { uliMessage: "", lehrer: [], currentSubjects: {}, fullSchedules: {} };
+    let SCHOOL_DATA = { uliMessage: "", lehrerPlan: [], currentSubjects: {}, fullSchedules: {} };
     const slots = [
         { s: "08:30", e: "09:00" }, { s: "09:10", e: "09:40" }, { s: "09:50", e: "10:20" }, 
         { s: "10:30", e: "11:00" }, { s: "11:10", e: "11:40" }, { s: "11:50", e: "12:20" }, 
@@ -78,24 +75,24 @@
     ];
 
     let step = 0;
-    const views = ["Live-Status", "Lehrer-Präsenz", "10", "11", "12"]; // Die Zahlen sind die Klassen-IDs
+    const views = ["Live-Status", "Lehrer-Präsenz", "10", "11", "12"];
 
-    async function fetchExternalData() {
+    async function fetchData() {
         try {
-            const response = await fetch('data.json?t=' + Date.now());
-            SCHOOL_DATA = await response.json();
-        } catch (e) { console.error("JSON Error", e); }
+            const resp = await fetch('data.json?t=' + Date.now());
+            SCHOOL_DATA = await resp.json();
+        } catch (e) { console.error("Update fehlgeschlagen"); }
     }
 
-    function updateUI() {
+    function update() {
         const now = new Date();
         const curMin = now.getHours() * 60 + now.getMinutes();
-        const day = now.getDay(); // 1=Mo, 5=Fr
+        const day = now.getDay(); 
 
         document.getElementById('h-m').textContent = now.toLocaleTimeString('de-DE', {hour:'2-digit', minute:'2-digit'});
         document.getElementById('sec').textContent = now.getSeconds().toString().padStart(2, '0');
         document.getElementById('live-date').textContent = now.toLocaleDateString('de-DE', {weekday:'long', day:'2-digit', month:'long'});
-        document.getElementById('uli-content').textContent = SCHOOL_DATA.uliMessage;
+        document.getElementById('uli-content').textContent = SCHOOL_DATA.uliMessage || "";
 
         let activeIdx = slots.findIndex(s => {
             const [sh, sm] = s.s.split(':').map(Number);
@@ -103,7 +100,7 @@
             return curMin >= (sh*60+sm) && curMin < (eh*60+em);
         });
 
-        // Impuls / Ticker
+        // Impuls Logik
         const ticker = document.getElementById('msg-ticker');
         ticker.classList.remove('urgent');
         let next = slots.find(s => (s.s.split(':').map(Number)[0]*60 + s.s.split(':').map(Number)[1]) > curMin);
@@ -112,71 +109,81 @@
             ticker.textContent = `!! IMPULS: Nächste Stunde in ${ (next.s.split(':').map(Number)[0]*60 + next.s.split(':').map(Number)[1]) - curMin } Min !!`;
             ticker.classList.add('urgent');
         } else {
-            ticker.textContent = activeIdx !== -1 ? (slots[activeIdx].label || `Stunde bis ${slots[activeIdx].e}`) : "Pause / Standby";
+            ticker.textContent = activeIdx !== -1 ? (slots[activeIdx].label || `Aktuelle Stunde endet um ${slots[activeIdx].e}`) : "Pause / Standby";
         }
 
-        render(activeIdx, day);
+        render(activeIdx, day, curMin);
     }
 
-    function render(activeIdx, today) {
+    function render(activeIdx, today, curMin) {
         const area = document.getElementById('content-area');
-        const viewTitle = views[step];
-        document.getElementById('view-label').textContent = isNaN(viewTitle) ? viewTitle : "PLAN KLASSE " + viewTitle;
+        const v = views[step];
+        document.getElementById('view-label').textContent = isNaN(v) ? v : "PLAN KLASSE " + v;
 
-        if(step === 0) { // LIVE CARDS
+        if(step === 0) { // LIVE STATUS CARDS
             const timeKey = activeIdx !== -1 ? slots[activeIdx].s : "";
-            const data = SCHOOL_DATA.currentSubjects[timeKey] || {};
+            const subjects = SCHOOL_DATA.currentSubjects[timeKey] || {};
             area.innerHTML = `<div class="grid-3">` + [10,11,12].map(c => `
                 <div class="big-card">
-                    <div style="font-size:1.2rem; opacity:0.6">KLASSE</div>
-                    <div style="font-size:5rem; font-weight:900">${c}</div>
-                    <div style="font-size:3rem; color:var(--accent); font-weight:bold">${data[c] || "--"}</div>
+                    <div style="opacity:0.6; font-size:1.2rem">KLASSE</div>
+                    <div style="font-size:6rem; font-weight:900">${c}</div>
+                    <div style="font-size:3.5rem; color:var(--accent); font-weight:bold">${subjects[c] || "--"}</div>
                 </div>`).join('') + `</div>`;
         } 
-        else if(step === 1) { // LEHRER
-            area.innerHTML = `<div class="big-card" style="width:100%; height:100%; justify-content:flex-start">
-                <h2 style="font-size:2.5rem; color:var(--accent); margin:10px 0;">Lehrkräfte im Haus</h2>
-                <div class="lehrer-grid">${(SCHOOL_DATA.lehrer || []).map(l => `<div class="lehrer-box"><b>${l.name}</b><br><small style="color:var(--highlight)">${l.status}</small></div>`).join('')}</div>
-            </div>`;
-        } 
-        else { // TABELLEN (KLASSE 10, 11, 12)
-            const classID = views[step];
-            let html = `<table><thead><tr><th style="width:140px">Zeit</th><th>Mo</th><th>Di</th><th>Mi</th><th>Do</th><th>Fr</th></tr></thead><tbody>`;
+        else if(step === 1) { // LEHRER AUTOMATIK
+            let lehrerHtml = `<div class="big-card" style="justify-content:flex-start">
+                <h2 style="font-size:3rem; color:var(--accent); margin-bottom:20px;">Lehrer-Anwesenheit (Geplant)</h2>
+                <div class="lehrer-grid">`;
             
+            (SCHOOL_DATA.lehrerPlan || []).forEach(l => {
+                let isHere = false;
+                if(l.zeiten[today]) {
+                    const [sH, sM] = l.zeiten[today][0].split(':').map(Number);
+                    const [eH, eM] = l.zeiten[today][1].split(':').map(Number);
+                    if(curMin >= (sH*60+sM) && curMin < (eH*60+eM)) isHere = true;
+                }
+                const color = isHere ? 'var(--highlight)' : 'gray';
+                lehrerHtml += `<div class="lehrer-box" style="border-left-color:${color}">
+                    <b style="font-size:1.4rem">${l.name}</b><br>
+                    <small style="color:${color}; font-weight:bold">${isHere ? 'IM HAUS' : 'NICHT IM DIENST'}</small>
+                </div>`;
+            });
+            area.innerHTML = lehrerHtml + `</div></div>`;
+        } 
+        else { // TABELLEN PLAN
+            const cid = views[step];
+            let tableHtml = `<table><thead><tr><th style="width:160px">Zeit</th><th>Mo</th><th>Di</th><th>Mi</th><th>Do</th><th>Fr</th></tr></thead><tbody>`;
             slots.forEach((s, i) => {
-                const isCurrentTimeRow = (i === activeIdx);
-                html += `<tr><td style="background:rgba(0,0,0,0.2); font-weight:bold">${s.s}-${s.e}</td>`;
-                
+                const isTimeRow = (i === activeIdx);
+                tableHtml += `<tr><td style="background:rgba(0,0,0,0.2); font-weight:bold">${s.s}-${s.e}</td>`;
                 if(s.label) {
-                    const highlightPause = (isCurrentTimeRow && today >= 1 && today <= 5) ? 'active-cell' : '';
-                    html += `<td colspan="5" class="${highlightPause}" style="color:var(--pause)">${s.label}</td>`;
+                    const pauseHighlight = (isTimeRow && today >= 1 && today <= 5) ? 'active-cell' : '';
+                    tableHtml += `<td colspan="5" class="${pauseHighlight}" style="color:var(--pause); font-weight:bold">${s.label}</td>`;
                 } else {
                     for(let d=1; d<=5; d++) {
-                        const isToday = (today === d);
-                        const isHighlight = (isCurrentTimeRow && isToday);
-                        const cellText = (SCHOOL_DATA.fullSchedules[classID] && SCHOOL_DATA.fullSchedules[classID][d]) 
-                                         ? (SCHOOL_DATA.fullSchedules[classID][d][s.s] || "--") : "--";
-                        
-                        html += `<td class="${isHighlight ? 'active-cell' : ''}">${cellText}</td>`;
+                        const activeCell = (isTimeRow && d === today);
+                        const subject = (SCHOOL_DATA.fullSchedules[cid] && SCHOOL_DATA.fullSchedules[cid][d]) ? SCHOOL_DATA.fullSchedules[cid][d][s.s] || "--" : "--";
+                        tableHtml += `<td class="${activeCell ? 'active-cell' : ''}">${subject}</td>`;
                     }
                 }
-                html += `</tr>`;
+                tableHtml += `</tr>`;
             });
-            area.innerHTML = html + `</tbody></table>`;
+            area.innerHTML = tableHtml + `</tbody></table>`;
         }
     }
 
-    setInterval(() => { 
-        step = (step + 1) % views.length; 
+    // Intervalle
+    setInterval(() => {
+        step = (step + 1) % views.length;
         const area = document.getElementById('content-area');
         area.classList.remove('fade'); void area.offsetWidth; area.classList.add('fade');
-        updateUI(); 
+        update();
     }, 10000);
 
-    setInterval(updateUI, 1000);
-    setInterval(fetchExternalData, 15000); // Schnellerer JSON Check (15s)
-    
-    fetchExternalData().then(() => updateUI());
+    setInterval(update, 1000);
+    setInterval(fetchData, 20000);
+
+    fetchData().then(() => update());
 </script>
 </body>
 </html>
