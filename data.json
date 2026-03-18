@@ -1,23 +1,35 @@
 {
-  "uliMessage": "Projektwoche: Bitte die Räume sauber hinterlassen!",
-  "lehrer": [
-    { "name": "Hr. Müller", "status": "Präsent" },
-    { "name": "Fr. Schmidt", "status": "Krank" },
-    { "name": "Hr. Weber", "status": "Dienstgang" }
+  "uliMessage": "Willkommen! Bitte denkt an die Anmeldung für die Projektwoche bis Freitag.",
+  "lehrerPlan": [
+    { 
+      "name": "Hr. Müller", 
+      "zeiten": {
+        "1": ["08:00", "13:00"],
+        "2": ["08:00", "15:30"],
+        "3": ["08:00", "13:00"],
+        "4": ["09:00", "12:00"],
+        "5": ["08:00", "11:30"]
+      }
+    },
+    { 
+      "name": "Fr. Schmidt", 
+      "zeiten": {
+        "1": ["09:00", "16:00"],
+        "3": ["08:00", "12:00"],
+        "5": ["08:00", "14:00"]
+      }
+    }
   ],
   "currentSubjects": {
     "08:30": { "10": "Mathe", "11": "Deutsch", "12": "Physik" },
-    "09:10": { "10": "Englisch", "11": "Bio", "12": "Chemie" }
+    "09:10": { "10": "Englisch", "11": "Physik", "12": "Bio" }
   },
   "fullSchedules": {
     "10": {
       "1": { "08:30": "Mathe", "09:10": "Englisch" },
-      "2": { "08:30": "Deutsch", "09:10": "Sport" },
-      "3": { "08:30": "Physik", "09:10": "Kunst" },
-      "4": { "08:30": "Bio", "09:10": "Mathe" },
-      "5": { "08:30": "Geschichte", "09:10": "Musik" }
+      "2": { "08:30": "Deutsch", "09:10": "Sport" }
     },
-    "11": { "1": { "08:30": "Deutsch" }, "2": { "08:30": "Mathe" } },
-    "12": { "1": { "08:30": "Physik" }, "2": { "08:30": "Chemie" } }
+    "11": { "1": { "08:30": "Deutsch" } },
+    "12": { "1": { "08:30": "Physik" } }
   }
 }
