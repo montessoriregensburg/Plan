@@ -1,0 +1,14 @@
+{
+  "uliMessage": "Projektwoche: Bitte die Küche sauber hinterlassen!",
+  "lehrer": [
+    { "name": "Hr. x", "status": "Präsent" },
+    { "name": "Fr. y", "status": "Krank" },
+    { "name": "Hr. z", "status": "Krank" },
+    { "name": "Fr. g", "status": "Präsent" }
+  ],
+  "currentSubjects": {
+    "08:30": { "10": "Mathe", "11": "Deutsch", "12": "Physik" },
+    "09:10": { "10": "Englisch", "11": "Bio", "12": "Chemie" },
+    "13:40": { "10": "Sport", "11": "Kunst", "12": "Geschichte" }
+  }
+}
