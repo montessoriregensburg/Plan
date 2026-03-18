@@ -27,8 +27,29 @@
 
         .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; height: 100%; }
         .big-card { background: var(--panel); border-radius: 20px; padding: 30px; display: flex; flex-direction: column; align-items: center; justify-content: center; border-top: 12px solid var(--accent); text-align: center; height: 100%; }
+        
         .lehrer-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; width: 100%; margin-top: 20px; }
-        .lehrer-box { background: rgba(255,255,255,0.05); padding: 15px; border-radius: 10px; border-left: 5px solid gray; text-align: left; }
+        .lehrer-box { 
+            background: rgba(255,255,255,0.05); 
+            padding: 15px; 
+            border-radius: 10px; 
+            border-left: 6px solid var(--highlight); 
+            text-align: left; 
+            position: relative; 
+            min-height: 80px;
+        }
+
+        .class-badge {
+            position: absolute;
+            top: 8px;
+            right: 10px;
+            background: var(--accent);
+            color: var(--bg);
+            padding: 2px 8px;
+            border-radius: 5px;
+            font-size: 0.9rem;
+            font-weight: 900;
+        }
 
         table { width: 100%; height: 100%; border-collapse: collapse; background: var(--panel); table-layout: fixed; border-radius: 20px; overflow: hidden; }
         th { background: #334155; color: var(--accent); padding: 12px; font-size: 1.3rem; }
@@ -116,7 +137,7 @@
         const timeKey = activeIdx !== -1 ? slots[activeIdx].s : "";
         document.getElementById('view-label').textContent = isNaN(v) ? v : "PLAN KLASSE " + v;
 
-        if(step === 0) { // LIVE STATUS CARDS (Automatisch aus Wochenplan)
+        if(step === 0) {
             area.innerHTML = `<div class="grid-3">` + [10,11,12].map(c => {
                 let currentFach = "--";
                 if (SCHOOL_DATA.fullSchedules[c] && SCHOOL_DATA.fullSchedules[c][today] && SCHOOL_DATA.fullSchedules[c][today][timeKey]) {
@@ -129,26 +150,43 @@
                 </div>`;
             }).join('') + `</div>`;
         } 
-        else if(step === 1) { // LEHRER
+        else if(step === 1) { // LEHRER LOGIK (MULTI-SCHICHT & NUR PRÄSENT)
             let lehrerHtml = `<div class="big-card" style="justify-content:flex-start">
-                <h2 style="font-size:3rem; color:var(--accent); margin-bottom:20px;">Lehrer-Anwesenheit</h2>
+                <h2 style="font-size:3rem; color:var(--accent); margin-bottom:20px;">Lehrkräfte im Dienst</h2>
                 <div class="lehrer-grid">`;
+            
+            let count = 0;
             (SCHOOL_DATA.lehrerPlan || []).forEach(l => {
-                let isHere = false;
-                if(l.zeiten[today]) {
-                    const [sH, sM] = l.zeiten[today][0].split(':').map(Number);
-                    const [eH, eM] = l.zeiten[today][1].split(':').map(Number);
-                    if(curMin >= (sH*60+sM) && curMin < (eH*60+eM)) isHere = true;
+                let isHereNow = false;
+                
+                if(l.zeiten && l.zeiten[today]) {
+                    const schichten = l.zeiten[today];
+                    schichten.forEach(schicht => {
+                        if (Array.isArray(schicht)) {
+                            const [sH, sM] = schicht[0].split(':').map(Number);
+                            const [eH, eM] = schicht[1].split(':').map(Number);
+                            if(curMin >= (sH*60+sM) && curMin < (eH*60+eM)) isHereNow = true;
+                        }
+                    });
                 }
-                const color = isHere ? 'var(--highlight)' : 'gray';
-                lehrerHtml += `<div class="lehrer-box" style="border-left-color:${color}">
-                    <b style="font-size:1.4rem">${l.name}</b><br>
-                    <small style="color:${color}; font-weight:bold">${isHere ? 'IM HAUS' : 'NICHT IM DIENST'}</small>
-                </div>`;
+
+                if(isHereNow) {
+                    count++;
+                    const badge = l.fokus ? `<div class="class-badge">${l.fokus}</div>` : "";
+                    lehrerHtml += `<div class="lehrer-box">
+                        ${badge}
+                        <b style="font-size:1.4rem">${l.name}</b><br>
+                        <small style="color:var(--highlight); font-weight:bold">PRÄSENT</small>
+                    </div>`;
+                }
             });
+
+            if(count === 0) {
+                lehrerHtml += `<div style="grid-column: 1 / -1; font-size:2rem; opacity:0.4; margin-top:50px;">Aktuell keine Lehrkräfte im Haus.</div>`;
+            }
             area.innerHTML = lehrerHtml + `</div></div>`;
         } 
-        else { // WOCHENPLAN
+        else {
             const cid = views[step];
             let tableHtml = `<table><thead><tr><th style="width:160px">Zeit</th><th>Mo</th><th>Di</th><th>Mi</th><th>Do</th><th>Fr</th></tr></thead><tbody>`;
             slots.forEach((s, i) => {
