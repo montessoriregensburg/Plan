@@ -2,140 +2,98 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-    <title>Plan Admin Ultimate</title>
+    <title>Info-Board Admin</title>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
     <style>
-        :root { --accent: #38bdf8; --bg: #0f172a; --card: #1e293b; --highlight: #22c55e; }
+        :root { --accent: #38bdf8; --bg: #0f172a; --card: #1e293b; }
         body { font-family: 'Inter', sans-serif; background: var(--bg); color: white; padding: 20px; }
-        .container { max-width: 1200px; margin: auto; background: var(--card); padding: 30px; border-radius: 20px; box-shadow: 0 20px 50px rgba(0,0,0,0.5); }
-        h1, h2 { color: var(--accent); border-bottom: 2px solid var(--accent); padding-bottom: 8px; }
-        .form-group { margin-bottom: 30px; padding: 20px; background: rgba(0,0,0,0.2); border-radius: 10px; }
-        label { display: block; font-weight: bold; margin-bottom: 10px; color: var(--accent); }
-        input, textarea { width: 100%; padding: 10px; background: var(--bg); border: 1px solid #334155; color: white; border-radius: 6px; }
-        
-        /* Tabellen Styling */
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; table-layout: fixed; }
-        th { background: #334155; padding: 10px; font-size: 0.8rem; text-transform: uppercase; }
-        td { padding: 4px; border: 1px solid #334155; }
-        .schedule-input { width: 100%; border: none; background: transparent; color: white; text-align: center; padding: 8px 0; }
-        .schedule-input:focus { background: rgba(56, 189, 248, 0.1); outline: none; }
-        
-        .time-col { width: 120px; background: #0f172a; font-weight: bold; font-size: 0.8rem; text-align: center; }
-        .btn-add { background: var(--highlight); color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; margin-top: 10px; }
-        .btn-del { background: #ef4444; border: none; color: white; padding: 5px 10px; border-radius: 4px; cursor: pointer; }
-        
-        .generate-btn { background: var(--accent); color: var(--bg); width: 100%; padding: 25px; border: none; border-radius: 12px; font-size: 1.5rem; font-weight: 900; cursor: pointer; margin-top: 40px; transition: 0.2s; }
-        .generate-btn:hover { transform: scale(1.02); filter: brightness(1.1); }
-        #outputJson { background: #000; color: var(--highlight); font-family: 'Consolas', monospace; height: 300px; margin-top: 15px; width: 100%; }
+        .container { max-width: 800px; margin: auto; background: var(--card); padding: 30px; border-radius: 20px; }
+        .form-group { margin-bottom: 25px; padding: 15px; background: rgba(0,0,0,0.2); border-radius: 10px; }
+        label { display: block; margin-bottom: 8px; color: var(--accent); font-weight: bold; }
+        input, textarea { width: 100%; padding: 12px; background: var(--bg); border: 1px solid #334155; color: white; border-radius: 8px; margin-bottom: 10px; }
+        .info-row { display: flex; gap: 10px; margin-bottom: 10px; }
+        .btn { padding: 12px 20px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; }
+        .btn-add { background: #22c55e; color: white; }
+        .btn-send { background: var(--accent); color: var(--bg); width: 100%; font-size: 1.2rem; margin-top: 20px; }
+        #status { margin-top: 15px; text-align: center; font-weight: bold; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h1>Plan Konfigurator</h1>
+    <h1>Info-Board Editor</h1>
 
     <div class="form-group">
-        <label>Ticker (Header oben)</label>
-        <input type="text" id="uliMsg" placeholder="Nachricht eingeben...">
-        
-        <label style="margin-top:20px;">Wichtige Informationen (Eigene Slide)</label>
-        <textarea id="infoText" placeholder="Längere Ankündigungen hier rein..."></textarea>
+        <label>Haupt-Info (Große Slide)</label>
+        <textarea id="mainInfo" placeholder="Allgemeine Nachricht für die Haupt-Slide..."></textarea>
     </div>
 
     <div class="form-group">
-        <h2>Lehrkräfte im Haus</h2>
-        <table id="lehrerTable">
-            <thead><tr><th>Name</th><th>Fach</th><th>Klasse</th><th>Aktion</th></tr></thead>
-            <tbody id="lehrerBody"></tbody>
-        </table>
-        <button class="btn-add" onclick="addLehrerRow()">+ Lehrer hinzufügen</button>
-    </div>
-
-    <div id="class-schedules">
+        <label>Kurzmeldungen / Wer meldet was?</label>
+        <div id="msgContainer">
+            <div class="info-row">
+                <input type="text" class="msg-who" placeholder="Von wem? (z.B. Sekretariat)">
+                <input type="text" class="msg-text" placeholder="Was? (z.B. Fundsachen abholen)">
+                <button class="btn" style="background:#ef4444" onclick="this.parentElement.remove()">X</button>
+            </div>
         </div>
-
-    <button class="generate-btn" onclick="generateJSON()">JSON-CODE GENERIEREN</button>
-
-    <div class="form-group" style="margin-top: 40px;">
-        <label>Fertiger Code für <strong>data.json</strong>:</label>
-        <textarea id="outputJson" readonly></textarea>
+        <button class="btn btn-add" onclick="addMsgRow()">+ Meldung hinzufügen</button>
     </div>
+
+    <button class="btn btn-send" onclick="sendData()">DATEN PER E-MAIL SENDEN</button>
+    <div id="status"></div>
 </div>
 
 <script>
-    const times = ["08:30", "09:10", "09:50", "10:30", "11:10", "11:50", "12:30", "13:40", "14:15", "14:55", "15:30"];
-    const days = ["Mo", "Di", "Mi", "Do", "Fr"];
-    const classes = ["10", "11", "12"];
+    // INITIALISIERUNG EMAILJS
+    (function(){
+        emailjs.init("DEINE_PUBLIC_KEY"); // Ersetzen!
+    })();
 
-    // Lehrer-Zeilen
-    function addLehrerRow(n="", f="", k="") {
-        const row = document.createElement('tr');
-        row.innerHTML = `
-            <td><input type="text" class="l-name" value="${n}"></td>
-            <td><input type="text" class="l-fach" value="${f}"></td>
-            <td><input type="text" class="l-klasse" value="${k}"></td>
-            <td style="text-align:center"><button class="btn-del" onclick="this.parentElement.parentElement.remove()">X</button></td>
+    function addMsgRow() {
+        const div = document.createElement('div');
+        div.className = 'info-row';
+        div.innerHTML = `
+            <input type="text" class="msg-who" placeholder="Von wem?">
+            <input type="text" class="msg-text" placeholder="Was?">
+            <button class="btn" style="background:#ef4444" onclick="this.parentElement.remove()">X</button>
         `;
-        document.getElementById('lehrerBody').appendChild(row);
+        document.getElementById('msgContainer').appendChild(div);
     }
 
-    // Stundenplan-Tabellen generieren
-    function createSchedules() {
-        const container = document.getElementById('class-schedules');
-        classes.forEach(c => {
-            let html = `<h2>Stundenplan Klasse ${c}</h2><table><thead><tr><th class="time-col">Zeit</th>`;
-            days.forEach(d => html += `<th>${d}</th>`);
-            html += `</tr></thead><tbody>`;
-            
-            times.forEach(t => {
-                html += `<tr><td class="time-col">${t}</td>`;
-                for(let d=1; d<=5; d++) {
-                    html += `<td><input type="text" class="cell-${c}-${d}-${t}" placeholder="-"></td>`;
-                }
-                html += `</tr>`;
-            });
-            html += `</tbody></table><br><br>`;
-            container.innerHTML += html;
+    function sendData() {
+        const status = document.getElementById('status');
+        status.innerText = "Sende...";
+
+        // JSON zusammenbauen
+        const messages = [];
+        document.querySelectorAll('.info-row').forEach(row => {
+            const who = row.querySelector('.msg-who').value;
+            const text = row.querySelector('.msg-text').value;
+            if(who && text) messages.push({ who, text });
         });
-    }
 
-    function generateJSON() {
-        const data = {
-            uliMessage: document.getElementById('uliMsg').value,
-            infoSlideText: document.getElementById('infoText').value,
-            lehrerPlan: [],
-            fullSchedules: { "10": {}, "11": {}, "12": {} }
+        const jsonData = {
+            infoSlideText: document.getElementById('mainInfo').value,
+            shortMessages: messages,
+            timestamp: new Date().toLocaleString()
         };
 
-        // Lehrer sammeln
-        document.querySelectorAll('#lehrerBody tr').forEach(row => {
-            const name = row.querySelector('.l-name').value;
-            if(!name) return;
-            data.lehrerPlan.push({
-                name: name,
-                fach: row.querySelector('.l-fach').value || "-",
-                zeiten: { "1": [["08:30","16:00", row.querySelector('.l-klasse').value]], "2": [["08:30","16:00",""]], "3": [["08:30","16:00",""]], "4": [["08:30","16:00",""]], "5": [["08:30","16:00",""]] }
+        const templateParams = {
+            message: JSON.stringify(jsonData, null, 4),
+            to_name: "Admin",
+            subject: "Update für Info-Board"
+        };
+
+        emailjs.send('DEIN_SERVICE_ID', 'DEIN_TEMPLATE_ID', templateParams)
+            .then(() => {
+                status.style.color = "#22c55e";
+                status.innerText = "Erfolgreich gesendet! Check dein Postfach.";
+            }, (err) => {
+                status.style.color = "#ef4444";
+                status.innerText = "Fehler: " + JSON.stringify(err);
             });
-        });
-
-        // Stundenpläne sammeln
-        classes.forEach(c => {
-            for(let d=1; d<=5; d++) {
-                data.fullSchedules[c][d] = {};
-                times.forEach(t => {
-                    const val = document.querySelector(`.cell-${c}-${d}-${t}`).value;
-                    if(val) data.fullSchedules[c][d][t] = val;
-                });
-            }
-        });
-
-        const out = document.getElementById('outputJson');
-        out.value = JSON.stringify(data, null, 4);
-        out.select();
-        alert("JSON generiert! Jetzt kopieren und in GitHub data.json einfügen.");
     }
-
-    createSchedules();
-    addLehrerRow(); // Startzeile Lehrer
 </script>
 </body>
 </html>
