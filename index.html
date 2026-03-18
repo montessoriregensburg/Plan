@@ -21,29 +21,27 @@
         .info-card { background: linear-gradient(135deg, var(--info-color), #7e22ce); padding: 18px; border-radius: 15px; border-left: 8px solid #fff; min-width: 400px; }
 
         #msg-ticker { background: var(--accent); color: var(--bg); font-size: 2.2rem; font-weight: 900; text-align: center; height: 80px; display: flex; align-items: center; justify-content: center; text-transform: uppercase; }
-        .urgent { background: var(--warning) !important; color: white !important; animation: pulse 1.5s infinite; }
-        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.8; } 100% { opacity: 1; } }
+        .urgent { background: var(--warning) !important; color: white !important; }
 
         main { flex: 1; padding: 25px; background: radial-gradient(circle at center, #1e293b 0%, #0f172a 100%); }
         
         table { width: 100%; height: 100%; border-collapse: separate; border-spacing: 8px; table-layout: fixed; }
         th { background: var(--glass); color: var(--accent); font-size: 1.3rem; padding: 10px; border-radius: 10px; }
-        td { background: var(--glass); border-radius: 10px; text-align: center; font-size: 1.4rem; border: 1px solid rgba(255,255,255,0.05); transition: all 0.4s ease; }
+        td { background: var(--glass); border-radius: 10px; text-align: center; font-size: 1.4rem; border: 1px solid rgba(255,255,255,0.05); }
         
-        /* Die aktive Unterrichtsstunde */
         .active-cell { 
             background: var(--highlight) !important; 
             color: white !important; 
             font-weight: 900; 
             border: 4px solid #fff !important;
-            box-shadow: 0 0 25px rgba(34, 197, 94, 0.5);
+            box-shadow: 0 0 30px rgba(34, 197, 94, 0.4);
             transform: scale(1.02);
         }
 
         .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; height: 100%; }
         .big-card { background: var(--panel); border-radius: 25px; padding: 30px; display: flex; flex-direction: column; align-items: center; justify-content: center; border-top: 12px solid var(--accent); text-align: center; height: 100%; position: relative; }
         
-        .timer-box { background: rgba(0,0,0,0.3); padding: 15px 25px; border-radius: 15px; color: var(--highlight); font-weight: 800; font-size: 2.4rem; margin-top: 20px; border: 2px solid var(--highlight); }
+        .timer-box { background: rgba(0,0,0,0.3); padding: 15px 30px; border-radius: 15px; color: var(--highlight); font-weight: 800; font-size: 3rem; margin-top: 20px; border: 2px solid var(--highlight); min-width: 220px; }
 
         .lehrer-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; width: 100%; }
         .lehrer-box { background: var(--glass); border-left: 10px solid var(--highlight); padding: 25px; border-radius: 20px; position: relative; }
@@ -66,13 +64,13 @@
     <div class="live-time"><span id="h-m">00:00</span><span id="sec" class="seconds">00</span></div>
 </header>
 
-<div id="msg-ticker">Initialisiere...</div>
+<div id="msg-ticker">System bereit</div>
 
 <main id="content-area" class="fade"></main>
 
 <script>
     const TEST_MODE = true; 
-    const TEST_TIME = "09:47"; 
+    const TEST_TIME = "09:20"; 
     const TEST_DAY  = 3; 
 
     let SCHOOL_DATA = { uliMessage: "", lehrerPlan: [], fullSchedules: {} };
@@ -162,17 +160,33 @@
             let html = `<div class="grid-3">`;
             [10,11,12].forEach(c => {
                 const next = getNextImpulse(c.toString(), today, curMin);
-                let content = next ? `
-                    <div class="next-label">Nächster Impuls (${next.dayOffset===0?"Heute":next.dayOffset===1?"Morgen":["So","Mo","Di","Mi","Do","Fr","Sa"][next.day]})</div>
-                    <div style="font-size:1.6rem; opacity:0.8; margin-bottom:15px;">${next.time} Uhr</div>
-                    <div style="font-size:4rem; color:var(--accent); font-weight:900;">${next.fach}</div>
-                    <div class="timer-box" style="${(next.dayOffset*24*60 + timeToMin(next.time)-curMin)>=1440?'color:var(--pause);border-color:var(--pause);':''}">T- ${Math.floor(((next.dayOffset*24*60) + (timeToMin(next.time)-curMin))/60)}h ${((next.dayOffset*24*60) + (timeToMin(next.time)-curMin))%60}m</div>
-                ` : `<div style="opacity:0.3; font-size:1.5rem;">Keine weiteren Impulse</div>`;
+                let content = "";
+                
+                if (next) {
+                    let totalDiffMin = (next.dayOffset * 24 * 60) + (timeToMin(next.time) - curMin);
+                    let h = Math.floor(totalDiffMin / 60);
+                    let m = totalDiffMin % 60;
+                    
+                    // Anzeige-Logik: h nur anzeigen wenn > 0
+                    let displayTime = h > 0 ? `${h}h ${m}m` : `${m}m`;
+
+                    content = `
+                        <div class="next-label">Nächster Impuls (${next.dayOffset===0?"Heute":next.dayOffset===1?"Morgen":["So","Mo","Di","Mi","Do","Fr","Sa"][next.day]})</div>
+                        <div style="font-size:1.6rem; opacity:0.8; margin-bottom:15px;">${next.time} Uhr</div>
+                        <div style="font-size:4rem; color:var(--accent); font-weight:900;">${next.fach}</div>
+                        <div class="timer-box" style="${h >= 24 ? 'color:var(--pause);border-color:var(--pause);' : ''}">
+                            ${displayTime}
+                        </div>
+                    `;
+                } else {
+                    content = `<div style="opacity:0.3; font-size:1.5rem;">Keine weiteren Impulse</div>`;
+                }
                 html += `<div class="big-card"><div style="position:absolute; top:25px; left:25px; font-size:2.2rem; font-weight:900; opacity:0.15">KLASSE ${c}</div>${content}</div>`;
             });
             area.innerHTML = html + `</div>`;
         } 
         else if(step === 1) { 
+            // ... (Lehrer-Präsenz Code unverändert)
             let html = `<div class="big-card" style="justify-content:flex-start; align-items:stretch; padding:45px;">
                 <h2 style="font-size:2.8rem; margin-bottom:30px; color:var(--accent)">Lehrkräfte im Haus</h2>
                 <div class="lehrer-grid">`;
@@ -187,6 +201,7 @@
             area.innerHTML = (fnd === 0 ? html + `<div style="font-size:2.5rem; opacity:0.2; text-align:center; width:100%; margin-top:50px;">Aktuell keine Lehrkräfte im Haus</div>` : html) + `</div></div>`;
         } 
         else { 
+            // ... (Stundenplan Tabelle Code unverändert)
             const cid = views[step];
             let table = `<table><thead><tr><th style="width:160px">Zeit</th><th>Mo</th><th>Di</th><th>Mi</th><th>Do</th><th>Fr</th></tr></thead><tbody>`;
             slots.forEach((s, idx) => {
