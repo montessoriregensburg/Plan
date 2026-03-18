@@ -18,7 +18,19 @@
         .live-time { font-size: 5rem; font-weight: 800; font-variant-numeric: tabular-nums; }
         .seconds { font-size: 2rem; color: var(--accent); margin-left: 5px; opacity: 0.7; }
         
-        .info-card { background: linear-gradient(135deg, var(--info-color), #7e22ce); padding: 18px; border-radius: 15px; border-left: 8px solid #fff; min-width: 400px; }
+        /* Zentrierte Info-Card */
+        .info-card { 
+            background: linear-gradient(135deg, var(--info-color), #7e22ce); 
+            padding: 10px 30px; 
+            border-radius: 15px; 
+            border-left: 8px solid #fff; 
+            min-width: 450px; 
+            height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+        }
 
         #msg-ticker { background: var(--accent); color: var(--bg); font-size: 2.2rem; font-weight: 900; text-align: center; height: 80px; display: flex; align-items: center; justify-content: center; text-transform: uppercase; }
         .urgent { background: var(--warning) !important; color: white !important; }
@@ -71,9 +83,9 @@
 <main id="content-area" class="fade"></main>
 
 <script>
-    const TEST_MODE = true; 
-    const TEST_TIME = "09:50"; 
-    const TEST_DAY  = 3; 
+    const TEST_MODE = false; 
+    const TEST_TIME = "08:31"; 
+    const TEST_DAY  = 1; 
 
     let SCHOOL_DATA = { uliMessage: "", lehrerPlan: [], fullSchedules: {} };
     const slots = [
@@ -110,7 +122,6 @@
                 const sorted = slots.filter(s => !s.label).sort((a,b) => timeToMin(a.s) - timeToMin(b.s));
                 for (let slot of sorted) {
                     const startMin = timeToMin(slot.s);
-                    // Impuls bleibt bis 3 Min nach Start "aktuell"
                     if (i === 0 && currentMin > (startMin + 3)) continue;
                     
                     const fach = dayPlan[slot.s];
