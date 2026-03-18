@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Schul-Display ULTIMATE LIVE</title>
+    <title>Schul-Display SMART-LIVE</title>
     <style>
         :root {
             --bg: #0f172a; --panel: #1e293b; --text: #f8fafc;
@@ -13,13 +13,11 @@
         * { box-sizing: border-box; cursor: none; }
         body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', sans-serif; margin: 0; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
         
-        /* Header */
         header { display: flex; justify-content: space-between; align-items: center; padding: 10px 40px; background: var(--panel); border-bottom: 4px solid var(--accent); height: 115px; }
         .live-time { font-size: 4.5rem; font-weight: 800; font-variant-numeric: tabular-nums; line-height: 1; }
         .seconds { font-size: 2rem; color: var(--accent); margin-left: 5px; }
         .uli-card { background: var(--uli); padding: 15px; border-radius: 12px; border-left: 8px solid white; min-width: 400px; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
 
-        /* Impuls Ticker */
         #msg-ticker { background: var(--accent); color: var(--bg); padding: 10px; font-size: 2rem; font-weight: bold; text-align: center; height: 70px; display: flex; align-items: center; justify-content: center; text-transform: uppercase; transition: 0.5s; }
         .urgent { background: var(--warning) !important; color: white !important; animation: blink 1s infinite; }
         @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.7; } }
@@ -27,13 +25,11 @@
         main { flex: 1; padding: 25px; position: relative; }
         #content-area { height: 100%; width: 100%; }
 
-        /* Card & Grid Designs */
         .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; height: 100%; }
         .big-card { background: var(--panel); border-radius: 20px; padding: 30px; display: flex; flex-direction: column; align-items: center; justify-content: center; border-top: 12px solid var(--accent); text-align: center; height: 100%; }
         .lehrer-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; width: 100%; margin-top: 20px; }
         .lehrer-box { background: rgba(255,255,255,0.05); padding: 15px; border-radius: 10px; border-left: 5px solid gray; text-align: left; }
 
-        /* Table Design */
         table { width: 100%; height: 100%; border-collapse: collapse; background: var(--panel); table-layout: fixed; border-radius: 20px; overflow: hidden; }
         th { background: #334155; color: var(--accent); padding: 12px; font-size: 1.3rem; }
         td { border: 1px solid #334155; text-align: center; font-size: 1.2rem; transition: 0.3s; }
@@ -51,22 +47,22 @@
         <div id="live-date" style="font-size: 1.5rem; opacity: 0.8;">---</div>
     </div>
     <div class="uli-card">
-        <small style="text-transform: uppercase; font-weight: 800; opacity: 0.8; font-size: 0.8rem;">Informationen</small>
-        <div id="uli-content" style="font-size: 1.3rem; font-weight: bold; margin-top: 5px;">Lade Daten...</div>
+        <small style="text-transform: uppercase; font-weight: 800; opacity: 0.8; font-size: 0.8rem;">Nachrichten Uli</small>
+        <div id="uli-content" style="font-size: 1.3rem; font-weight: bold; margin-top: 5px;">Lade...</div>
     </div>
     <div class="live-time">
         <span id="h-m">00:00</span><span id="sec" class="seconds">00</span>
     </div>
 </header>
 
-<div id="msg-ticker">Initialisiere...</div>
+<div id="msg-ticker">System bereit...</div>
 
 <main>
     <div id="content-area" class="fade"></div>
 </main>
 
 <script>
-    let SCHOOL_DATA = { uliMessage: "", lehrerPlan: [], currentSubjects: {}, fullSchedules: {} };
+    let SCHOOL_DATA = { uliMessage: "", lehrerPlan: [], fullSchedules: {} };
     const slots = [
         { s: "08:30", e: "09:00" }, { s: "09:10", e: "09:40" }, { s: "09:50", e: "10:20" }, 
         { s: "10:30", e: "11:00" }, { s: "11:10", e: "11:40" }, { s: "11:50", e: "12:20" }, 
@@ -100,7 +96,6 @@
             return curMin >= (sh*60+sm) && curMin < (eh*60+em);
         });
 
-        // Impuls Logik
         const ticker = document.getElementById('msg-ticker');
         ticker.classList.remove('urgent');
         let next = slots.find(s => (s.s.split(':').map(Number)[0]*60 + s.s.split(':').map(Number)[1]) > curMin);
@@ -109,7 +104,7 @@
             ticker.textContent = `!! IMPULS: Nächste Stunde in ${ (next.s.split(':').map(Number)[0]*60 + next.s.split(':').map(Number)[1]) - curMin } Min !!`;
             ticker.classList.add('urgent');
         } else {
-            ticker.textContent = activeIdx !== -1 ? (slots[activeIdx].label || `Aktuelle Stunde endet um ${slots[activeIdx].e}`) : "Pause / Standby";
+            ticker.textContent = activeIdx !== -1 ? (slots[activeIdx].label || `Aktuelle Stunde bis ${slots[activeIdx].e}`) : "Pause / Standby";
         }
 
         render(activeIdx, day, curMin);
@@ -118,23 +113,26 @@
     function render(activeIdx, today, curMin) {
         const area = document.getElementById('content-area');
         const v = views[step];
+        const timeKey = activeIdx !== -1 ? slots[activeIdx].s : "";
         document.getElementById('view-label').textContent = isNaN(v) ? v : "PLAN KLASSE " + v;
 
-        if(step === 0) { // LIVE STATUS CARDS
-            const timeKey = activeIdx !== -1 ? slots[activeIdx].s : "";
-            const subjects = SCHOOL_DATA.currentSubjects[timeKey] || {};
-            area.innerHTML = `<div class="grid-3">` + [10,11,12].map(c => `
-                <div class="big-card">
+        if(step === 0) { // LIVE STATUS CARDS (Automatisch aus Wochenplan)
+            area.innerHTML = `<div class="grid-3">` + [10,11,12].map(c => {
+                let currentFach = "--";
+                if (SCHOOL_DATA.fullSchedules[c] && SCHOOL_DATA.fullSchedules[c][today] && SCHOOL_DATA.fullSchedules[c][today][timeKey]) {
+                    currentFach = SCHOOL_DATA.fullSchedules[c][today][timeKey];
+                }
+                return `<div class="big-card">
                     <div style="opacity:0.6; font-size:1.2rem">KLASSE</div>
                     <div style="font-size:6rem; font-weight:900">${c}</div>
-                    <div style="font-size:3.5rem; color:var(--accent); font-weight:bold">${subjects[c] || "--"}</div>
-                </div>`).join('') + `</div>`;
+                    <div style="font-size:3.5rem; color:var(--accent); font-weight:bold">${currentFach}</div>
+                </div>`;
+            }).join('') + `</div>`;
         } 
-        else if(step === 1) { // LEHRER AUTOMATIK
+        else if(step === 1) { // LEHRER
             let lehrerHtml = `<div class="big-card" style="justify-content:flex-start">
-                <h2 style="font-size:3rem; color:var(--accent); margin-bottom:20px;">Lehrer-Anwesenheit (Geplant)</h2>
+                <h2 style="font-size:3rem; color:var(--accent); margin-bottom:20px;">Lehrer-Anwesenheit</h2>
                 <div class="lehrer-grid">`;
-            
             (SCHOOL_DATA.lehrerPlan || []).forEach(l => {
                 let isHere = false;
                 if(l.zeiten[today]) {
@@ -150,7 +148,7 @@
             });
             area.innerHTML = lehrerHtml + `</div></div>`;
         } 
-        else { // TABELLEN PLAN
+        else { // WOCHENPLAN
             const cid = views[step];
             let tableHtml = `<table><thead><tr><th style="width:160px">Zeit</th><th>Mo</th><th>Di</th><th>Mi</th><th>Do</th><th>Fr</th></tr></thead><tbody>`;
             slots.forEach((s, i) => {
@@ -172,7 +170,6 @@
         }
     }
 
-    // Intervalle
     setInterval(() => {
         step = (step + 1) % views.length;
         const area = document.getElementById('content-area');
@@ -182,9 +179,7 @@
 
     setInterval(update, 1000);
     setInterval(fetchData, 20000);
-
     fetchData().then(() => update());
 </script>
 </body>
 </html>
-
