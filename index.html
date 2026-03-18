@@ -13,27 +13,36 @@
         }
         * { box-sizing: border-box; cursor: none; font-family: 'Inter', 'Segoe UI', sans-serif; }
         body { background: var(--bg); color: var(--text); margin: 0; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+        
         header { display: flex; justify-content: space-between; align-items: center; padding: 0 40px; background: var(--panel); border-bottom: 4px solid var(--accent); height: 120px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); z-index: 10; }
         .live-time { font-size: 5rem; font-weight: 800; font-variant-numeric: tabular-nums; letter-spacing: -2px; }
         .seconds { font-size: 2rem; color: var(--accent); margin-left: 5px; opacity: 0.7; }
+        
         .info-card { background: linear-gradient(135deg, var(--info-color), #7e22ce); padding: 18px; border-radius: 15px; border-left: 8px solid #fff; min-width: 450px; box-shadow: 0 10px 20px rgba(0,0,0,0.2); }
+
         #msg-ticker { background: var(--accent); color: var(--bg); font-size: 2.2rem; font-weight: 900; text-align: center; height: 80px; display: flex; align-items: center; justify-content: center; text-transform: uppercase; letter-spacing: 1px; }
         .urgent { background: var(--warning) !important; color: white !important; }
+
         main { flex: 1; padding: 30px; background: radial-gradient(circle at center, #1e293b 0%, #0f172a 100%); }
+        
         table { width: 100%; height: 100%; border-collapse: separate; border-spacing: 5px; table-layout: fixed; }
         th { background: var(--glass); color: var(--accent); font-size: 1.2rem; text-transform: uppercase; padding: 8px; border-radius: 8px; }
         td { background: var(--glass); border-radius: 8px; text-align: center; font-size: 1.2rem; border: 1px solid rgba(255,255,255,0.05); }
+        
         .active-cell { background: var(--highlight) !important; color: white !important; font-weight: 900; border: 2px solid #fff !important; }
+
         .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; height: 100%; }
         .big-card { background: var(--panel); border-radius: 20px; padding: 30px; display: flex; flex-direction: column; align-items: center; justify-content: center; border-top: 12px solid var(--accent); text-align: center; height: 100%; }
+        
         .lehrer-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; width: 100%; margin-top: 20px; }
         .lehrer-box { background: var(--glass); border-left: 8px solid var(--highlight); padding: 20px; border-radius: 15px; position: relative; }
         .class-badge { position: absolute; top: 8px; right: 10px; background: var(--accent); color: var(--bg); padding: 2px 8px; border-radius: 5px; font-size: 0.9rem; font-weight: 900; }
+
         .fade { animation: fadeIn 0.5s ease-out; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
     </style>
 </head>
-<body>
+<body onclick="document.documentElement.requestFullscreen()">
 
 <header>
     <div>
@@ -52,11 +61,10 @@
 <main id="content-area" class="fade"></main>
 
 <script>
-   // --------------------------------------
     const TEST_MODE = true; 
-    const TEST_TIME = "08:30"; 
+    const TEST_TIME = "10:30"; 
     const TEST_DAY  = 1; 
-//---------------------------------------------
+
     let SCHOOL_DATA = { uliMessage: "", lehrerPlan: [], fullSchedules: {} };
     const slots = [
         { s: "08:30", e: "09:00" }, { s: "09:10", e: "09:40" }, { s: "09:50", e: "10:20" }, 
@@ -72,7 +80,7 @@
         try {
             const resp = await fetch('data.json?t=' + Date.now());
             SCHOOL_DATA = await resp.json();
-        } catch (e) { console.error("Fehler beim Laden"); }
+        } catch (e) { console.error("Fehler"); }
     }
 
     function update() {
@@ -88,9 +96,9 @@
         document.getElementById('info-content').textContent = SCHOOL_DATA.uliMessage || "";
 
         let activeIdx = slots.findIndex(s => {
-            const sMin = parseInt(s.s.split(':')[0]) * 60 + parseInt(s.s.split(':')[1]);
-            const eMin = parseInt(s.e.split(':')[0]) * 60 + parseInt(s.e.split(':')[1]);
-            return curMin >= sMin && curMin < eMin;
+            const sM = parseInt(s.s.split(':')[0])*60 + parseInt(s.s.split(':')[1]);
+            const eM = parseInt(s.e.split(':')[0])*60 + parseInt(s.e.split(':')[1]);
+            return curMin >= sM && curMin < eM;
         });
 
         const ticker = document.getElementById('msg-ticker');
@@ -131,21 +139,26 @@
                 <div class="lehrer-grid">`;
             let found = 0;
             (SCHOOL_DATA.lehrerPlan || []).forEach(l => {
+                let currentFokus = "";
                 let isHere = false;
+
                 if(l.zeiten && l.zeiten[today]) {
                     l.zeiten[today].forEach(schicht => {
                         const sM = parseInt(schicht[0].split(':')[0])*60 + parseInt(schicht[0].split(':')[1]);
                         const eM = parseInt(schicht[1].split(':')[0])*60 + parseInt(schicht[1].split(':')[1]);
-                        if(curMin >= sM && curMin < eM) isHere = true;
+                        if(curMin >= sM && curMin < eM) {
+                            isHere = true;
+                            currentFokus = schicht[2] || ""; // Fokus aus der Schicht holen
+                        }
                     });
                 }
+
                 if(isHere) {
                     found++;
-                    const lehrerFach = l.fach ? l.fach : "";
                     html += `<div class="lehrer-box">
-                        ${l.fokus ? `<div class="class-badge">${l.fokus}</div>` : ""}
+                        ${currentFokus ? `<div class="class-badge">${currentFokus}</div>` : ""}
                         <b style="font-size: 1.6rem; display: block; margin-bottom: 5px;">${l.name}</b>
-                        <div style="color: var(--accent); font-weight: 600; font-size: 1.1rem; text-transform: uppercase; letter-spacing: 1px;">${lehrerFach}</div>
+                        <div style="color: var(--accent); font-weight: 600; font-size: 1.1rem; text-transform: uppercase;">${l.fach || ""}</div>
                     </div>`;
                 }
             });
