@@ -21,11 +21,10 @@
         .info-card { background: linear-gradient(135deg, var(--info-color), #7e22ce); padding: 18px; border-radius: 15px; border-left: 8px solid #fff; min-width: 450px; box-shadow: 0 10px 20px rgba(0,0,0,0.2); }
 
         #msg-ticker { background: var(--accent); color: var(--bg); font-size: 2.2rem; font-weight: 900; text-align: center; height: 80px; display: flex; align-items: center; justify-content: center; text-transform: uppercase; letter-spacing: 1px; transition: background-color 0.5s; }
-        .urgent { background: var(--warning) !important; color: white !important; } /* KEIN BLINKEN MEHR */
+        .urgent { background: var(--warning) !important; color: white !important; }
 
         main { flex: 1; padding: 30px; background: radial-gradient(circle at center, #1e293b 0%, #0f172a 100%); }
         
-        /* Tabellen Design */
         table { width: 100%; height: 100%; border-collapse: separate; border-spacing: 5px; table-layout: fixed; }
         th { background: var(--glass); color: var(--accent); font-size: 1.2rem; text-transform: uppercase; padding: 8px; border-radius: 8px; }
         td { background: var(--glass); border-radius: 8px; text-align: center; font-size: 1.2rem; border: 1px solid rgba(255,255,255,0.05); }
@@ -37,13 +36,11 @@
             border: 2px solid #fff !important;
         }
 
-        /* Klassen Übersicht (Original Design) */
         .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; height: 100%; }
         .big-card { background: var(--panel); border-radius: 20px; padding: 30px; display: flex; flex-direction: column; align-items: center; justify-content: center; border-top: 12px solid var(--accent); text-align: center; height: 100%; }
         
         .lehrer-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; width: 100%; margin-top: 20px; }
         .lehrer-box { background: var(--glass); border-left: 8px solid var(--highlight); padding: 20px; border-radius: 15px; position: relative; }
-
         .class-badge { position: absolute; top: 8px; right: 10px; background: var(--accent); color: var(--bg); padding: 2px 8px; border-radius: 5px; font-size: 0.9rem; font-weight: 900; }
 
         .fade { animation: fadeIn 0.5s ease-out; }
@@ -69,6 +66,14 @@
 <main id="content-area" class="fade"></main>
 
 <script>
+    // ==========================================
+    // ZEIT-MANIPULATION (NUR ZUM TESTEN)
+    // ==========================================
+    const TEST_MODE = false;    // Auf 'true' setzen zum Testen
+    const TEST_TIME = "09:20"; // Wunschzeit
+    const TEST_DAY  = 1;       // 1=Mo, 2=Di, 3=Mi, 4=Do, 5=Fr
+    // ==========================================
+
     let SCHOOL_DATA = { uliMessage: "", lehrerPlan: [], fullSchedules: {} };
     const slots = [
         { s: "08:30", e: "09:00" }, { s: "09:10", e: "09:40" }, { s: "09:50", e: "10:20" }, 
@@ -89,10 +94,18 @@
 
     function update() {
         const now = new Date();
-        const h = now.getHours(), m = now.getMinutes(), day = now.getDay();
+        let h, m, day;
+
+        if (TEST_MODE) {
+            [h, m] = TEST_TIME.split(':').map(Number);
+            day = TEST_DAY;
+        } else {
+            h = now.getHours(); m = now.getMinutes(); day = now.getDay();
+        }
+        
         const curMin = h * 60 + m;
 
-        document.getElementById('h-m').textContent = now.toLocaleTimeString('de-DE', {hour:'2-digit', minute:'2-digit'});
+        document.getElementById('h-m').textContent = `${h.toString().padStart(2,'0')}:${m.toString().padStart(2,'0')}`;
         document.getElementById('sec').textContent = now.getSeconds().toString().padStart(2, '0');
         document.getElementById('live-date').textContent = now.toLocaleDateString('de-DE', {weekday:'long', day:'2-digit', month:'long'});
         document.getElementById('info-content').textContent = SCHOOL_DATA.uliMessage || "";
@@ -123,7 +136,7 @@
         const timeKey = activeIdx !== -1 ? slots[activeIdx].s : "";
         document.getElementById('view-label').textContent = isNaN(v) ? v : "STUNDENPLAN KLASSE " + v;
 
-        if(step === 0) { // KLASSEN ÜBERSICHT (WIE ZUVOR)
+        if(step === 0) { 
             area.innerHTML = `<div class="grid-3">` + [10,11,12].map(c => {
                 let currentFach = "--";
                 if (SCHOOL_DATA.fullSchedules[c] && SCHOOL_DATA.fullSchedules[c][today] && SCHOOL_DATA.fullSchedules[c][today][timeKey]) {
@@ -136,21 +149,21 @@
                 </div>`;
             }).join('') + `</div>`;
         } 
-        else if(step === 1) { // LEHRER
+        else if(step === 1) { 
             let html = `<div class="big-card" style="justify-content:flex-start; align-items:stretch; padding:40px;">
                 <h2 style="font-size:2.5rem; margin-bottom:20px; color:var(--accent)">Lehrkräfte im Haus</h2>
                 <div class="lehrer-grid">`;
             let found = 0;
             (SCHOOL_DATA.lehrerPlan || []).forEach(l => {
-                let isHere = false;
+                let isHereNow = false;
                 if(l.zeiten && l.zeiten[today]) {
                     l.zeiten[today].forEach(schicht => {
                         const [sH, sM] = schicht[0].split(':').map(Number);
                         const [eH, eM] = schicht[1].split(':').map(Number);
-                        if(curMin >= (sH*60+sM) && curMin < (eH*60+eM)) isHere = true;
+                        if(curMin >= (sH*60+sM) && curMin < (eH*60+eM)) isHereNow = true;
                     });
                 }
-                if(isHere) {
+                if(isHereNow) {
                     found++;
                     html += `<div class="lehrer-box">${l.fokus ? `<div class="class-badge">${l.fokus}</div>` : ""}
                         <b style="font-size:1.5rem">${l.name}</b><br>
@@ -160,7 +173,7 @@
             });
             area.innerHTML = (found === 0 ? html + `<div style="font-size:2rem; opacity:0.3">Aktuell keine Lehrkräfte markiert.</div>` : html) + `</div></div>`;
         } 
-        else { // WOCHENPLAN
+        else { 
             const cid = views[step];
             let table = `<table><thead><tr><th style="width:140px">Zeit</th><th>Mo</th><th>Di</th><th>Mi</th><th>Do</th><th>Fr</th></tr></thead><tbody>`;
             slots.forEach((s, i) => {
@@ -185,7 +198,7 @@
         const area = document.getElementById('content-area');
         area.classList.remove('fade'); void area.offsetWidth; area.classList.add('fade');
         update();
-    }, 10000); // FESTE 10 SEKUNDEN
+    }, 10000);
 
     setInterval(update, 1000);
     fetchData().then(update);
