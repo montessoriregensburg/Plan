@@ -1,26 +1,27 @@
 {
-  "uliMessage": "Test Test",
+  "uliMessage": "Willkommen im neuen Schuljahr!",
   "lehrerPlan": [
     {
-      "name": "Fr. Bockschweiger",
-      "fach": "D, Soz, Et10",
+      "name": "Hr. Müller",
+      "fach": "Mathe / Physik",
       "zeiten": {
-        "1": [ 
-          ["10:30", "13:00", "11"]
-          
+        "1": [
+          ["08:00", "10:00", "11"],
+          ["12:00", "15:00", "10"]
         ],
-        "2": [ 
+        "2": [
           ["08:00", "13:00", ""]
+        ]
       }
     },
     {
       "name": "Fr. Müller",
-      "fach": "Deutsch, Englisch",
-      "fokus": "",
+      "fach": "Deutsch / Englisch",
       "zeiten": {
-        "1": [ 
-          ["10:30", "13:00", "11"] ],
-        "2": [ ["10:30", "13:00", "11"] ]
+        "1": [
+          ["08:30", "11:00", "12"],
+          ["13:40", "15:30", ""]
+        ]
       }
     }
   ],
