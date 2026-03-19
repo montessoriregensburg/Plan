@@ -157,14 +157,26 @@
         render(activeIdx, day, curMin);
     }
 
-    function setStatusText(element, hour, activeIdx) {
-        if (hour >= 16) element.textContent = "Standby / Feierabend";
-        else if (hour >= 8) {
-            if (activeIdx !== -1) element.textContent = slots[activeIdx].label || `Unterricht läuft bis ${slots[activeIdx].e}`;
-            else element.textContent = currentQuote;
-        } else element.textContent = "Guten Morgen! Bald geht's los...";
+   function setStatusText(element, hour, activeIdx) {
+    if (hour >= 16) {
+        element.textContent = "Standby / Feierabend";
+    } else if (hour >= 8) {
+        // Wenn ein Slot aktiv ist UND dieser ein Label hat (z.B. MITTAGSPAUSE), zeige das Label
+        if (activeIdx !== -1 && slots[activeIdx].label) {
+            element.textContent = slots[activeIdx].label;
+        } else {
+            // In allen anderen Fällen während der Schulzeit (auch während Impulsen): Zeige Zitate
+            element.textContent = currentQuote;
+        }
+    } else {
+        element.textContent = "Guten Morgen! Bald geht's los...";
     }
+}
 
+
+
+
+    
     function render(activeIdx, today, curMin) {
         const area = document.getElementById('content-area');
         const v = views[step];
