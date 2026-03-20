@@ -394,7 +394,7 @@
       "2": { "08:30": "Englisch", "09:50": "Mathe", "12:30": "Deutsch", "13:00": "MITTAG", "13:40": "Spanisch", "14:15": "Spanisch", "14:55": "Spanisch" },
       "3": { "08:30": "PäPsy (S)", "09:10": "GeWi (G)", "09:50": "Sport", "10:30": "Sport", "12:30": "IP", "13:00": "MITTAG" },
       "4": { "09:10": "Ethik", "09:50": "Chemie (G)", "10:30": "Soziologie (S)", "11:50": "Kul (G)", "12:30": "Biologie (S)", "13:00": "MITTAG", "13:40": "Kunst", "14:15": "Kunst" },
-      "5": { "08:30": "PäPsy / GeWi", "10:30": "Deutsch", "12:30": "Englisch", "13:00": "MITTAG" }
+      "5": { "09:10": "PäPsy / GeWi", "10:30": "Deutsch", "12:30": "Englisch", "13:00": "MITTAG" }
     }
   }
 }
