@@ -46,15 +46,15 @@
     <div class="live-time"><span id="h-m">00:00</span><span id="sec" class="seconds">00</span></div>
 </header>
 
-<div id="msg-ticker">System bereit</div>
+<div id="msg-ticker">Initialisierung...</div>
 
 <main id="content-area" class="fade"></main>
 
 <script>
     // --- TEST EINSTELLUNGEN ---
-    const TEST_MODE = true;   // Auf true setzen zum Testen
-    const TEST_TIME = "07:50"; // Gewünschte Uhrzeit
-    const TEST_DAY  = 1;      // 1=Mo, 2=Di, 3=Mi, 4=Do, 5=Fr
+    const TEST_MODE = true;   
+    const TEST_TIME = "07:45"; 
+    const TEST_DAY  = 1;      
     // --------------------------
 
     const SLIDE_INTERVAL = 10000; 
@@ -87,14 +87,12 @@
     let currentQuote = quotes[Math.floor(Math.random() * quotes.length)];
     let SCHOOL_DATA = { uliMessage: "", shortMessages: [], fullSchedules: {} };
     
-    // Berechne den Zeit-Offset für den Test-Modus
     let debugOffset = 0;
     if (TEST_MODE) {
         const now = new Date();
         const [tH, tM] = TEST_TIME.split(':').map(Number);
         const target = new Date();
         target.setHours(tH, tM, 0);
-        // Da wir den Wochentag auch forcieren, speichern wir den nur für die Logik unten
         debugOffset = target.getTime() - now.getTime();
     }
 
@@ -124,18 +122,16 @@
     function update() {
         const now = new Date(Date.now() + debugOffset);
         const h = now.getHours(), m = now.getMinutes(), curMin = h * 60 + m;
-        // Wochentag: Nutze TEST_DAY falls aktiv, sonst echten Tag
         const day = TEST_MODE ? TEST_DAY : now.getDay();
 
         document.getElementById('h-m').textContent = `${h.toString().padStart(2,'0')}:${m.toString().padStart(2,'0')}`;
         document.getElementById('sec').textContent = now.getSeconds().toString().padStart(2, '0');
         
-        let dateStr = now.toLocaleDateString('de-DE', {weekday:'long', day:'2-digit', month:'long'});
         if(TEST_MODE) {
             const weekdays = ["Sonntag", "Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag"];
-            document.getElementById('live-date').textContent = "TEST: " + weekdays[TEST_DAY] + " (Simuliert)";
+            document.getElementById('live-date').textContent = "TEST: " + weekdays[TEST_DAY];
         } else {
-            document.getElementById('live-date').textContent = dateStr;
+            document.getElementById('live-date').textContent = now.toLocaleDateString('de-DE', {weekday:'long', day:'2-digit', month:'long'});
         }
 
         document.getElementById('info-content').textContent = SCHOOL_DATA.uliMessage || "";
@@ -145,6 +141,9 @@
         let nextS = slots.find(s => timeToMin(s.s) > curMin);
         
         ticker.classList.remove('urgent');
+
+        // Impuls-Vorschau (Priorität 1)
+        let impulseVisible = false;
         if(nextS && (timeToMin(nextS.s) - curMin) <= 5 && !nextS.label) {
             let imp = [];
             ["10","11","12"].forEach(cid => {
@@ -154,17 +153,32 @@
             if(imp.length > 0) {
                 ticker.textContent = `Impuls in ${timeToMin(nextS.s) - curMin} Min: ${imp.join(' | ')}`;
                 ticker.classList.add('urgent');
-            } else setStatusText(ticker, h, activeIdx);
-        } else setStatusText(ticker, h, activeIdx);
+                impulseVisible = true;
+            }
+        }
+
+        // Falls kein Impuls-Ticker, zeige Status-Texte (Priorität 2)
+        if(!impulseVisible) setStatusText(ticker, curMin, activeIdx);
 
         render(activeIdx, day, curMin);
     }
 
-    function setStatusText(element, hour, activeIdx) {
-        if (hour >= 18 || hour < 7) element.textContent = "Standby / Board inaktiv";
-        else {
-            if (activeIdx !== -1 && slots[activeIdx].label) element.textContent = slots[activeIdx].label;
-            else element.textContent = currentQuote;
+    function setStatusText(element, curMin, activeIdx) {
+        const min730 = 7 * 60 + 30;
+        const min800 = 8 * 60;
+        const min1600 = 16 * 60;
+
+        if (curMin >= min1600 || curMin < min730) {
+            element.textContent = "Standby";
+        } else if (curMin >= min730 && curMin < min800) {
+            element.textContent = "Startet gleich...";
+        } else {
+            // Während der Schulzeit: Entweder Pause oder Zitat
+            if (activeIdx !== -1 && slots[activeIdx].label) {
+                element.textContent = slots[activeIdx].label;
+            } else {
+                element.textContent = currentQuote;
+            }
         }
     }
 
