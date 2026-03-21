@@ -52,9 +52,9 @@
 
 <script>
     // --- TEST EINSTELLUNGEN ---
-    const TEST_MODE = false;   
-    const TEST_TIME = "07:45"; 
-    const TEST_DAY  = 1;      
+    const TEST_MODE = true;   
+    const TEST_TIME = "08:45"; 
+    const TEST_DAY  = 4;      
     // --------------------------
 
     const SLIDE_INTERVAL = 10000; 
@@ -104,7 +104,8 @@
     ];
 
     let step = 0;
-    const views = ["Live-Status", "Informationen", "10", "11", "12"];
+    // HIER WURDE "L" (Lehrer) HINZUGEFÜGT
+    const views = ["Live-Status", "Informationen", "10", "11", "12", "L"];
 
     async function fetchData() {
         try {
@@ -142,7 +143,6 @@
         
         ticker.classList.remove('urgent');
 
-        // Impuls-Vorschau (Priorität 1)
         let impulseVisible = false;
         if(nextS && (timeToMin(nextS.s) - curMin) <= 5 && !nextS.label) {
             let imp = [];
@@ -157,7 +157,6 @@
             }
         }
 
-        // Falls kein Impuls-Ticker, zeige Status-Texte (Priorität 2)
         if(!impulseVisible) setStatusText(ticker, curMin, activeIdx);
 
         render(activeIdx, day, curMin);
@@ -173,7 +172,6 @@
         } else if (curMin >= min730 && curMin < min800) {
             element.textContent = "Startet gleich...";
         } else {
-            // Während der Schulzeit: Entweder Pause oder Zitat
             if (activeIdx !== -1 && slots[activeIdx].label) {
                 element.textContent = slots[activeIdx].label;
             } else {
@@ -185,16 +183,17 @@
     function render(activeIdx, today, curMin) {
         const area = document.getElementById('content-area');
         const v = views[step];
-        // Aktuelles Datum für den Gültigkeits-Check
         const now = new Date(Date.now() + debugOffset);
         const todayStr = now.toISOString().split('T')[0];
 
-        document.getElementById('view-label').textContent = isNaN(v) ? v : "PLAN KLASSE " + v;
+        // Label Anpassung für Lehrerplan
+        let labelText = isNaN(v) ? v : "PLAN KLASSE " + v;
+        if(v === "L") labelText = "PLAN LEHRER";
+        document.getElementById('view-label').textContent = labelText;
 
         if (v === "Informationen") {
             let html = `<div class="big-card" style="justify-content:flex-start; align-items:stretch; padding:45px;"><h2 style="font-size: 2.5rem; margin-bottom:30px; color: var(--accent)">Aktuelle Informationen</h2><div class="msg-grid">`;
             
-            // FILTER: Nur Nachrichten anzeigen, die kein Datum haben oder noch gültig sind
             const activeMsgs = (SCHOOL_DATA.shortMessages || []).filter(m => {
                 const expiry = m.gueltig_bis;
                 return (!expiry || expiry === "unbefristet" || expiry >= todayStr);
@@ -202,11 +201,9 @@
 
             if (activeMsgs.length > 0) {
                 activeMsgs.forEach(m => {
-                    // Kompatibilität: Findet den Absender und den Text in allen möglichen Feldnamen
                     let sender = m.who || m.von || m.name || "Info";
                     let text = m.text || m.nachricht || m.reason || "";
                     let klasse = m.klasse ? ` (${m.klasse})` : "";
-
                     html += `<div class="msg-box"><b style="color:var(--accent); text-transform:uppercase; font-size:1.1rem;">${sender}${klasse}</b><div style="font-size:1.6rem; font-weight:700; margin-top:10px; line-height:1.2;">${text}</div></div>`;
                 });
             } else {
