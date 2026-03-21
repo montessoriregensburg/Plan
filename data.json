@@ -2,11 +2,17 @@
   "uliMessage": "Willkommen!",
   
 
-"infoSlideText": "Test von Nick",
+"infoSlideText": "deleted",
 "shortMessages": [{
 "von": "Nick Dierl", 
-  "klasse":"11",
-  "nachricht": "Test",
+  "klasse":"10",
+  "nachricht": "Mathe Test am 19.05",
+  "gueltig_bis":"2026-03-20"
+},
+  {
+"von": "Nick Dierl", 
+  "klasse":"10",
+  "nachricht": "Mathe Test am 19.05",
   "gueltig_bis":"2026-03-20"
 }
 ],
