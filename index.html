@@ -55,14 +55,14 @@
 <script>
     // --- TEST EINSTELLUNGEN ---
     const TEST_MODE = true;   
-    const TEST_TIME = "09:35"; // Format HH:MM
-    const TEST_DAY  = 1;      // 1=Mo, 2=Di, 3=Mi, 4=Do, 5=Fr
+    const TEST_TIME = "10:35"; 
+    const TEST_DAY  = 1;      
 
     const SLIDE_INTERVAL = 10000; 
     const QUOTE_INTERVAL = 30000;
 
     const quotes = [
-       "Focus on.", "Stay focused.", "Viel Erfolg heute.",
+        "Focus on.", "Stay focused.", "Viel Erfolg heute.",
 
         "\"Der größte Feind des Fortschritts ist nicht der Irrtum, sondern die Trägheit.\" – Henry Thomas Buckle",
 
@@ -105,12 +105,12 @@
         "\"Manche Leute sind so arm, alles was die haben ist Geld\" - Franz"
     ];
 
-    let currentQuote = quotes[0];
+    // Zufälliges Zitat beim ersten Laden
+    let currentQuote = quotes[Math.floor(Math.random() * quotes.length)];
     let SCHOOL_DATA = { uliMessage: "", shortMessages: [], fullSchedules: {}, lehrerPlan: [] };
     let step = 0;
     const views = ["Live-Status", "Informationen", "Lehrer", "10", "11", "12"];
     
-    // Zeitversatz berechnen für Test-Modus
     let debugOffset = 0;
     if (TEST_MODE) {
         const now = new Date();
@@ -166,8 +166,6 @@
         const ticker = document.getElementById('msg-ticker');
         let activeIdx = slots.findIndex(s => curMin >= timeToMin(s.s) && curMin < timeToMin(s.e));
         
-        // Ticker Logik
-        ticker.classList.remove('urgent');
         if (curMin >= 960 || curMin < 450) ticker.textContent = "Standby";
         else if (activeIdx !== -1 && slots[activeIdx].label) ticker.textContent = slots[activeIdx].label;
         else ticker.textContent = currentQuote;
@@ -209,12 +207,18 @@
                     const zeiten = l.zeiten[today.toString()] || [];
                     zeiten.forEach(z => {
                         const start = timeToMin(z[0]), end = timeToMin(z[1]);
-                        if (curMin >= start && curMin < end) {
+                        const isNow = curMin >= start && curMin < end;
+                        const isSoon = start > curMin && start - curMin <= 60;
+
+                        if (isNow || isSoon) {
                             count++;
-                            const klasse = z[2] ? `<div class="class-badge">KLASSE ${z[2]}</div>` : "";
-                            html += `<div class="msg-box" style="border-left-color: var(--highlight); background: rgba(255,255,255,0.03)">
+                            const statusColor = isNow ? 'var(--highlight)' : 'var(--pause)';
+                            const statusText = isNow ? `ANWESEND BIS ${z[1]}` : `DEMNÄCHST (AB ${z[0]})`;
+                            const klasse = z[2] ? `<div class="class-badge" style="background:${statusColor}">KLASSE ${z[2]}</div>` : "";
+                            
+                            html += `<div class="msg-box" style="border-left-color: ${statusColor}; background: rgba(255,255,255,0.03)">
                                 ${klasse}
-                                <b style="color:var(--highlight); text-transform:uppercase; font-size:0.9rem;">ANWESEND BIS ${z[1]}</b>
+                                <b style="color:${statusColor}; text-transform:uppercase; font-size:0.9rem;">${statusText}</b>
                                 <div style="font-size:1.8rem; font-weight:800; margin: 8px 0;">${l.name}</div>
                                 <div style="font-size:1.2rem; opacity:0.7;">Fach: ${l.fach}</div>
                             </div>`;
@@ -269,7 +273,10 @@
 
     // Intervalle
     setInterval(() => { step = (step + 1) % views.length; update(); }, SLIDE_INTERVAL);
-    setInterval(() => { currentQuote = quotes[Math.floor(Math.random() * quotes.length)]; }, QUOTE_INTERVAL);
+    setInterval(() => { 
+        currentQuote = quotes[Math.floor(Math.random() * quotes.length)]; 
+    }, QUOTE_INTERVAL);
+    
     setInterval(update, 1000);
     fetchData().then(update);
     setInterval(fetchData, 30000);
