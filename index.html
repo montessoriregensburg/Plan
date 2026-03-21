@@ -24,14 +24,14 @@
             min-width: 450px; height: 80px; display: flex; align-items: center; justify-content: center; text-align: center;
         }
 
-        #msg-ticker { background: var(--accent); color: var(--bg); font-size: 1.8rem; font-weight: 800; text-align: center; height: 80px; display: flex; align-items: center; justify-content: center; text-transform: uppercase; padding: 0 40px; line-height: 1.2; }
+        #msg-ticker { background: var(--accent); color: var(--bg); font-size: 1.8rem; font-weight: 800; text-align: center; height: 80px; display: flex; align-items: center; justify-content: center; text-transform: uppercase; padding: 0 40px; line-height: 1.2; transition: all 0.5s; }
         .urgent { background: var(--warning) !important; color: white !important; font-size: 2.2rem !important; }
 
         main { flex: 1; padding: 25px; background: radial-gradient(circle at center, #1e293b 0%, #0f172a 100%); }
         
         table { width: 100%; height: 100%; border-collapse: separate; border-spacing: 8px; table-layout: fixed; }
         th { background: var(--glass); color: var(--accent); font-size: 1.3rem; padding: 10px; border-radius: 10px; }
-        td { background: var(--glass); border-radius: 10px; text-align: center; font-size: 1.4rem; border: 1px solid rgba(255,255,255,0.05); transition: all 0.3s ease; }
+        td { background: var(--glass); border-radius: 10px; text-align: center; font-size: 1.4rem; border: 1px solid rgba(255,255,255,0.05); }
         
         .active-cell { 
             background: var(--highlight) !important; color: white !important; font-weight: 900; 
@@ -63,56 +63,22 @@
     <div class="live-time"><span id="h-m">00:00</span><span id="sec" class="seconds">00</span></div>
 </header>
 
-<div id="msg-ticker">Initialisierung...</div>
+<div id="msg-ticker">System bereit</div>
 
 <main id="content-area" class="fade"></main>
 
 <script>
     const quotes = [
         "Focus on.", "Stay focused.", "Viel Erfolg heute.",
-
-        "\"Der größte Feind des Fortschritts ist nicht der Irrtum, sondern die Trägheit.\" – Henry Thomas Buckle",
-
-        "\"Suche nicht nach Fehlern, suche nach Lösungen.\" – Henry Ford",
-
-        "\"Dummheit ist auch eine natürliche Begabung.\" – Wilhelm Busch",
-
-        "\"Folge dem Nick, denn er wird dir den Weg leiten.\" - Lena",
-
+        "\"Der größte Feind des Fortschritts ist nicht der Irrtum, sondern die Trägheit.\"",
+        "\"Suche nicht nach Fehlern, suche nach Lösungen.\"",
         "Tipp: Holt euch die Classroom-App fürs Handy",
-
-        "\"Vertrauen beruht auf Gegenseitigkeit.\" - Nick",
-
-        "\"Vertrauen ist gut - Kontrolle ist besser\" - Lena",
-
-        "Ich hab ne 4, aber eigentlich wär das ne 2",
-
-        "\"Zu wissen, wie viel es zu wissen gibt, ist der Anfang, das Leben zu lernen.\" - Dorothy West",
-
-        "x 1, 2 ist gleich minus p halbe plus minus Wurzel aus p halbe zum Quadrat minus q.",
-
-        "Time is running Guys",
-
-        "If you can dream it, you can do it",
-
-        "Die Würde des Menschen ist unantastbar",
-
-        "Was du heute kannst besorgen, das verschiebe nicht auf morgen",
-
-        "Nach den Ferien ist vor den Ferien",
-
-        "Tipp: Stellt die Töpfe mit Öffnung nach unten in die Spülmaschiene",
-
-        "Tipp: Nutzt den Kummerkasten",
-
         "Wichtig: Im Leiseraum herrscht Ruhe",
-
-        "Version 1.2.1",
-
-        "\"Manche Leute sind so arm, alles was die haben ist Geld\" - Franz"
+        "\"Manche Leute sind so arm, alles was die haben ist Geld\""
     ];
 
-    let currentQuote = quotes[0];
+    // Sofort ein zufälliges Zitat wählen
+    let currentQuote = quotes[Math.floor(Math.random() * quotes.length)];
     let SCHOOL_DATA = { uliMessage: "", infoSlideText: "", shortMessages: [], fullSchedules: {} };
     
     const slots = [
@@ -123,13 +89,14 @@
     ];
 
     let step = 0;
-    const views = ["Live-Status", "Information", "Meldungen", "10", "11", "12"];
+    // Information Slide (alt) entfernt, Meldungen in Informationen umbenannt
+    const views = ["Live-Status", "Informationen", "10", "11", "12"];
 
     async function fetchData() {
         try {
             const resp = await fetch('data.json?t=' + Date.now());
             SCHOOL_DATA = await resp.json();
-        } catch (e) { console.error("Fehler beim Laden der data.json"); }
+        } catch (e) { console.error("Datenfehler"); }
     }
 
     function timeToMin(t) {
@@ -138,7 +105,6 @@
         return h * 60 + m;
     }
 
-    // Sucht den nächsten Impuls über alle 7 Tage hinweg
     function getNextImpulse(classId, currentDay, currentMin) {
         let checkDay = currentDay;
         for (let i = 0; i < 8; i++) {
@@ -152,7 +118,7 @@
                     if (fach && fach.trim() !== "") return { fach, day: checkDay, time: slot.s, dayOffset: i, startMin: startMin };
                 }
             }
-            checkDay = (checkDay + 1) % 7; // Rotiert durch 0-6 (So-Sa)
+            checkDay = (checkDay + 1) % 7;
         }
         return null;
     }
@@ -200,20 +166,18 @@
         const v = views[step];
         document.getElementById('view-label').textContent = isNaN(v) ? v : "PLAN KLASSE " + v;
 
-        if (v === "Information") {
-            const info = SCHOOL_DATA.infoSlideText || "Keine neuen Informationen.";
-            area.innerHTML = `<div class="big-card" style="justify-content:flex-start; padding:60px; text-align:left; align-items:flex-start;"><h2 style="font-size:3rem; color:var(--accent); margin-bottom:30px; border-bottom:2px solid var(--accent); width:100%; padding-bottom:10px;">Informationen</h2><div style="font-size:2.2rem; line-height:1.5; white-space:pre-wrap; width:100%; overflow-y:auto;">${info}</div></div>`;
-        } 
-        else if (v === "Meldungen") {
-            let html = `<div class="big-card" style="justify-content:flex-start; align-items:stretch; padding:45px;"><h2 style="font-size: 2.5rem; margin-bottom:30px; color: var(--accent)">Kurzmeldungen</h2><div class="msg-grid">`;
+        if (v === "Informationen") {
+            let html = `<div class="big-card" style="justify-content:flex-start; align-items:stretch; padding:45px;"><h2 style="font-size: 2.5rem; margin-bottom:30px; color: var(--accent)">Aktuelle Informationen</h2><div class="msg-grid">`;
             if (SCHOOL_DATA.shortMessages && SCHOOL_DATA.shortMessages.length > 0) {
                 SCHOOL_DATA.shortMessages.forEach(m => {
-                    html += `<div class="msg-box"><b style="color:var(--accent); text-transform:uppercase;">${m.who}</b><div style="font-size:1.6rem; font-weight:700; margin-top:10px;">${m.text}</div></div>`;
+                    html += `<div class="msg-box"><b style="color:var(--accent); text-transform:uppercase; font-size:1.1rem;">${m.who}</b><div style="font-size:1.6rem; font-weight:700; margin-top:10px; line-height:1.2;">${m.text}</div></div>`;
                 });
-            } else html += `<div style="font-size:2rem; opacity:0.2; text-align:center; width:100%; margin-top:50px;">Keine Meldungen</div>`;
+            } else {
+                html += `<div style="font-size:2rem; opacity:0.2; text-align:center; width:100%; margin-top:50px;">Keine neuen Informationen verfügbar</div>`;
+            }
             area.innerHTML = html + `</div></div>`;
         }
-        else if (step === 0) { // Live-Status (7-Tage Logik aktiv!)
+        else if (step === 0) { // Live-Status
             let html = `<div class="grid-3">`;
             ["10","11","12"].forEach(c => {
                 const next = getNextImpulse(c, today, curMin);
@@ -228,7 +192,7 @@
             });
             area.innerHTML = html + `</div>`;
         } 
-        else { // Klassenpläne (Nur Montag bis Freitag!)
+        else { // Klassenpläne
             const cid = views[step];
             let table = `<table><thead><tr><th style="width:160px">Zeit</th><th>Mo</th><th>Di</th><th>Mi</th><th>Do</th><th>Fr</th></tr></thead><tbody>`;
             slots.forEach((slot) => {
@@ -242,15 +206,15 @@
         }
     }
 
+    // Ansichtswechsel alle 10 Sek + Zitatwechsel beim Umschalten
     setInterval(() => { 
         step = (step + 1) % views.length; 
+        currentQuote = quotes[Math.floor(Math.random() * quotes.length)]; // Zitat bei jedem Wechsel erneuern
         const area = document.getElementById('content-area');
         area.classList.remove('fade'); void area.offsetWidth; area.classList.add('fade');
         update(); 
     }, 10000);
 
-    setInterval(() => { currentQuote = quotes[Math.floor(Math.random() * quotes.length)]; }, 45 * 60 * 1000); 
-    
     setInterval(update, 1000);
     fetchData().then(update);
     setInterval(fetchData, 30000);
