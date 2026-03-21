@@ -17,8 +17,9 @@
         .live-time { font-size: 5rem; font-weight: 800; font-variant-numeric: tabular-nums; }
         .seconds { font-size: 2rem; color: var(--accent); margin-left: 5px; opacity: 0.7; }
         .info-card { background: linear-gradient(135deg, var(--info-color), #7e22ce); padding: 10px 30px; border-radius: 15px; border-left: 8px solid #fff; min-width: 450px; height: 80px; display: flex; align-items: center; justify-content: center; text-align: center; }
-        #msg-ticker { background: var(--accent); color: var(--bg); font-size: 1.8rem; font-weight: 800; text-align: center; height: 80px; display: flex; align-items: center; justify-content: center; text-transform: uppercase; padding: 0 40px; line-height: 1.2; transition: all 0.5s; }
-        .urgent { background: var(--warning) !important; color: white !important; font-size: 2.2rem !important; }
+        #msg-ticker { background: var(--accent); color: var(--bg); font-size: 1.8rem; font-weight: 800; text-align: center; height: 80px; display: flex; align-items: center; justify-content: center; text-transform: uppercase; padding: 0 40px; line-height: 1.2; transition: all 0.4s; }
+        .urgent-ticker { background: var(--warning) !important; color: white !important; font-size: 2.2rem !important; animation: blink 1s infinite; }
+        @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.7; } 100% { opacity: 1; } }
         main { flex: 1; padding: 25px; background: radial-gradient(circle at center, #1e293b 0%, #0f172a 100%); }
         .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; height: 100%; }
         .big-card { background: var(--panel); border-radius: 25px; padding: 30px; display: flex; flex-direction: column; align-items: center; justify-content: center; border-top: 12px solid var(--accent); text-align: center; height: 100%; position: relative; }
@@ -32,8 +33,8 @@
         .active-cell { background: var(--highlight) !important; color: white !important; font-weight: 900; border: 4px solid #fff !important; box-shadow: 0 0 30px rgba(34, 197, 94, 0.4); transform: scale(1.02); }
         .fade { animation: fadeIn 0.6s ease-out; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        @keyframes pulse { 0% { background: var(--highlight); transform: scale(1); } 50% { background: var(--warning); transform: scale(1.05); } 100% { background: var(--highlight); transform: scale(1); } }
-        .now-blinking { animation: pulse 0.8s infinite; color: white !important; border: none !important; font-size: 2.5rem !important; }
+        .now-blinking { animation: pulseNow 0.8s infinite; color: white !important; border: none !important; font-size: 2.5rem !important; }
+        @keyframes pulseNow { 0% { background: var(--highlight); } 50% { background: var(--warning); } 100% { background: var(--highlight); } }
     </style>
 </head>
 <body onclick="document.documentElement.requestFullscreen()">
@@ -53,9 +54,9 @@
 <main id="content-area" class="fade"></main>
 
 <script>
-    // --- TEST EINSTELLUNGEN ---
+    // --- KONFIGURATION ---
     const TEST_MODE = true;   
-    const TEST_TIME = "09:45"; 
+    const TEST_TIME = "09:05"; 
     const TEST_DAY  = 1;      
 
     const SLIDE_INTERVAL = 10000; 
@@ -63,49 +64,12 @@
 
     const quotes = [
         "Focus on.", "Stay focused.", "Viel Erfolg heute.",
-
-        "\"Der größte Feind des Fortschritts ist nicht der Irrtum, sondern die Trägheit.\" – Henry Thomas Buckle",
-
         "\"Suche nicht nach Fehlern, suche nach Lösungen.\" – Henry Ford",
-
-        "\"Dummheit ist auch eine natürliche Begabung.\" – Wilhelm Busch",
-
-        "\"Folge dem Nick, denn er wird dir den Weg leiten.\" - Lena",
-
         "Tipp: Holt euch die Classroom-App fürs Handy",
-
-        "\"Vertrauen beruht auf Gegenseitigkeit.\" - Nick",
-
-        "\"Vertrauen ist gut - Kontrolle ist besser\" - Lena",
-
-        "Ich hab ne 4, aber eigentlich wär das ne 2",
-
-        "\"Zu wissen, wie viel es zu wissen gibt, ist der Anfang, das Leben zu lernen.\" - Dorothy West",
-
-        "x 1, 2 ist gleich minus p halbe plus minus Wurzel aus p halbe zum Quadrat minus q.",
-
-        "Time is running Guys",
-
-        "If you can dream it, you can do it",
-
-        "Die Würde des Menschen ist unantastbar",
-
-        "Was du heute kannst besorgen, das verschiebe nicht auf morgen",
-
-        "Nach den Ferien ist vor den Ferien",
-
-        "Tipp: Stellt die Töpfe mit Öffnung nach unten in die Spülmaschiene",
-
-        "Tipp: Nutzt den Kummerkasten",
-
-        "Wichtig: Im Leiseraum herrscht Ruhe",
-
-        "Version 1.2.1",
-
-        "\"Manche Leute sind so arm, alles was die haben ist Geld\" - Franz"
+        "Keep Pushing!",
+        "Ein Tag ohne Lächeln ist ein verlorener Tag."
     ];
 
-    // Zufälliges Zitat beim ersten Laden
     let currentQuote = quotes[Math.floor(Math.random() * quotes.length)];
     let SCHOOL_DATA = { uliMessage: "", shortMessages: [], fullSchedules: {}, lehrerPlan: [] };
     let step = 0;
@@ -163,12 +127,27 @@
         document.getElementById('live-date').textContent = TEST_MODE ? "TEST: " + weekdays[TEST_DAY] : now.toLocaleDateString('de-DE', {weekday:'long', day:'2-digit', month:'long'});
         document.getElementById('info-content').textContent = SCHOOL_DATA.uliMessage || "";
 
+        // TICKER LOGIK (Zitate vs. Eilmeldung)
         const ticker = document.getElementById('msg-ticker');
-        let activeIdx = slots.findIndex(s => curMin >= timeToMin(s.s) && curMin < timeToMin(s.e));
+        ticker.classList.remove('urgent-ticker');
         
-        if (curMin >= 960 || curMin < 450) ticker.textContent = "Standby";
-        else if (activeIdx !== -1 && slots[activeIdx].label) ticker.textContent = slots[activeIdx].label;
-        else ticker.textContent = currentQuote;
+        let urgentImpulses = [];
+        ["10","11","12"].forEach(cid => {
+            const next = getNextImpulse(cid, day, curMin, curSecTotal);
+            if(next && next.dayOffset === 0 && next.secondsDiff > 0 && next.secondsDiff <= 300) {
+                urgentImpulses.push(`KL. ${cid}: ${next.fach} (${Math.ceil(next.secondsDiff/60)} Min)`);
+            }
+        });
+
+        if (urgentImpulses.length > 0) {
+            ticker.textContent = "⚠️ IMPULS STARTET: " + urgentImpulses.join(" | ");
+            ticker.classList.add('urgent-ticker');
+        } else {
+            let activeIdx = slots.findIndex(s => curMin >= timeToMin(s.s) && curMin < timeToMin(s.e));
+            if (curMin >= 960 || curMin < 450) ticker.textContent = "Standby";
+            else if (activeIdx !== -1 && slots[activeIdx].label) ticker.textContent = slots[activeIdx].label;
+            else ticker.textContent = currentQuote;
+        }
 
         render(day, curMin, curSecTotal);
     }
@@ -176,9 +155,7 @@
     function render(today, curMin, curSecTotal) {
         const area = document.getElementById('content-area');
         const v = views[step];
-        const now = new Date(Date.now() + debugOffset);
-        const todayStr = now.toISOString().split('T')[0];
-
+        const todayStr = new Date(Date.now() + debugOffset).toISOString().split('T')[0];
         document.getElementById('view-label').textContent = isNaN(v) ? v.toUpperCase() : "PLAN KLASSE " + v;
 
         if (step === 0) { // LIVE STATUS
@@ -209,15 +186,12 @@
                         const start = timeToMin(z[0]), end = timeToMin(z[1]);
                         const isNow = curMin >= start && curMin < end;
                         const isSoon = start > curMin && start - curMin <= 60;
-
                         if (isNow || isSoon) {
                             count++;
                             const statusColor = isNow ? 'var(--highlight)' : 'var(--pause)';
                             const statusText = isNow ? `ANWESEND BIS ${z[1]}` : `DEMNÄCHST (AB ${z[0]})`;
-                            const klasse = z[2] ? `<div class="class-badge" style="background:${statusColor}">KLASSE ${z[2]}</div>` : "";
-                            
                             html += `<div class="msg-box" style="border-left-color: ${statusColor}; background: rgba(255,255,255,0.03)">
-                                ${klasse}
+                                ${z[2] ? '<div class="class-badge" style="background:'+statusColor+'">KLASSE '+z[2]+'</div>' : ''}
                                 <b style="color:${statusColor}; text-transform:uppercase; font-size:0.9rem;">${statusText}</b>
                                 <div style="font-size:1.8rem; font-weight:800; margin: 8px 0;">${l.name}</div>
                                 <div style="font-size:1.2rem; opacity:0.7;">Fach: ${l.fach}</div>
@@ -271,12 +245,8 @@
         return null;
     }
 
-    // Intervalle
     setInterval(() => { step = (step + 1) % views.length; update(); }, SLIDE_INTERVAL);
-    setInterval(() => { 
-        currentQuote = quotes[Math.floor(Math.random() * quotes.length)]; 
-    }, QUOTE_INTERVAL);
-    
+    setInterval(() => { currentQuote = quotes[Math.floor(Math.random() * quotes.length)]; }, QUOTE_INTERVAL);
     setInterval(update, 1000);
     fetchData().then(update);
     setInterval(fetchData, 30000);
