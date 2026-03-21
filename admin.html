@@ -2,96 +2,110 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-    <title>Info-Board Admin</title>
+    <title>Info-Board Einreichung</title>
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
     <style>
         :root { --accent: #38bdf8; --bg: #0f172a; --card: #1e293b; }
         body { font-family: 'Inter', sans-serif; background: var(--bg); color: white; padding: 20px; }
-        .container { max-width: 800px; margin: auto; background: var(--card); padding: 30px; border-radius: 20px; }
+        .container { max-width: 600px; margin: auto; background: var(--card); padding: 30px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.3); }
+        h1 { text-align: center; color: var(--accent); margin-bottom: 30px; }
         .form-group { margin-bottom: 25px; padding: 15px; background: rgba(0,0,0,0.2); border-radius: 10px; }
-        label { display: block; margin-bottom: 8px; color: var(--accent); font-weight: bold; }
-        input, textarea { width: 100%; padding: 12px; background: var(--bg); border: 1px solid #334155; color: white; border-radius: 8px; margin-bottom: 10px; }
-        .info-row { display: flex; gap: 10px; margin-bottom: 10px; }
-        .btn { padding: 12px 20px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; }
-        .btn-add { background: #22c55e; color: white; }
-        .btn-send { background: var(--accent); color: var(--bg); width: 100%; font-size: 1.2rem; margin-top: 20px; }
-        #status { margin-top: 15px; text-align: center; font-weight: bold; }
+        label { display: block; margin-bottom: 12px; color: #94a3b8; font-weight: bold; }
+        input { width: 100%; padding: 12px; background: var(--bg); border: 1px solid #334155; color: white; border-radius: 8px; margin-bottom: 10px; box-sizing: border-box; }
+        .info-row { display: flex; gap: 10px; margin-bottom: 15px; align-items: center; }
+        .btn { padding: 12px 20px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; transition: opacity 0.2s; }
+        .btn:hover { opacity: 0.9; }
+        .btn-add { background: #22c55e; color: white; width: 100%; }
+        .btn-send { background: var(--accent); color: var(--bg); width: 100%; font-size: 1.2rem; margin-top: 20px; text-transform: uppercase; letter-spacing: 1px; }
+        .btn-del { background: #ef4444; color: white; height: 42px; width: 42px; flex-shrink: 0; }
+        #status { margin-top: 20px; text-align: center; font-weight: bold; min-height: 24px; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h1>Info-Board Editor</h1>
+    <h1>Info einreichen</h1>
 
     <div class="form-group">
-        <label>Haupt-Info (Große Slide)</label>
-        <textarea id="mainInfo" placeholder="Allgemeine Nachricht für die Haupt-Slide..."></textarea>
-    </div>
-
-    <div class="form-group">
-        <label>Kurzmeldungen / Wer meldet was?</label>
+        <label>Meldungen (Wer meldet was?)</label>
         <div id="msgContainer">
             <div class="info-row">
-                <input type="text" class="msg-who" placeholder="Von wem?">
-                <input type="text" class="msg-text" placeholder="Was?">
-                <button class="btn" style="background:#ef4444" onclick="this.parentElement.remove()">X</button>
+                <input type="text" class="msg-who" placeholder="Name">
+                <input type="text" class="msg-text" placeholder="Grund / Nachricht">
+                <button class="btn btn-del" onclick="this.parentElement.remove()">✕</button>
             </div>
         </div>
-        <button class="btn btn-add" onclick="addMsgRow()">+ Meldung hinzufügen</button>
+        <button class="btn btn-add" onclick="addMsgRow()">+ Weitere Zeile hinzufügen</button>
     </div>
 
-    <button class="btn btn-send" onclick="sendData()">DATEN PER E-MAIL SENDEN</button>
+    <button class="btn btn-send" onclick="sendData()">Jetzt Einreichen</button>
     <div id="status"></div>
 </div>
 
 <script>
-    // INITIALISIERUNG EMAILJS
+    // INITIALISIERUNG EMAILJS (Deine Keys sind bereits hinterlegt)
     (function(){
-        emailjs.init("2IcY8ndM7LrI8e66W"); // Ersetzen!
+        emailjs.init("2IcY8ndM7LrI8e66W");
     })();
 
     function addMsgRow() {
         const div = document.createElement('div');
         div.className = 'info-row';
         div.innerHTML = `
-            <input type="text" class="msg-who" placeholder="Von wem?">
-            <input type="text" class="msg-text" placeholder="Was?">
-            <button class="btn" style="background:#ef4444" onclick="this.parentElement.remove()">X</button>
+            <input type="text" class="msg-who" placeholder="Name">
+            <input type="text" class="msg-text" placeholder="Grund / Nachricht">
+            <button class="btn btn-del" onclick="this.parentElement.remove()">✕</button>
         `;
         document.getElementById('msgContainer').appendChild(div);
     }
 
     function sendData() {
         const status = document.getElementById('status');
-        status.innerText = "Sende...";
+        const btn = document.querySelector('.btn-send');
+        
+        status.innerText = "Wird gesendet...";
+        status.style.color = "white";
+        btn.disabled = true;
 
-        // JSON zusammenbauen
-        const messages = [];
+        // Daten sammeln
+        const entries = [];
         document.querySelectorAll('.info-row').forEach(row => {
-            const who = row.querySelector('.msg-who').value;
-            const text = row.querySelector('.msg-text').value;
-            if(who && text) messages.push({ who, text });
+            const name = row.querySelector('.msg-who').value.trim();
+            const reason = row.querySelector('.msg-text').value.trim();
+            if(name && reason) entries.push({ name, reason });
         });
 
-        const jsonData = {
-            infoSlideText: document.getElementById('mainInfo').value,
-            shortMessages: messages,
-            timestamp: new Date().toLocaleString()
-        };
+        if (entries.length === 0) {
+            status.innerText = "Bitte mindestens einen Namen und Grund angeben.";
+            status.style.color = "#ef4444";
+            btn.disabled = false;
+            return;
+        }
 
         const templateParams = {
-            message: JSON.stringify(jsonData, null, 4),
+            message: JSON.stringify(entries, null, 4),
             to_name: "Admin",
-            subject: "Update für Info-Board"
+            subject: "Neue Einreichung für Info-Board",
+            timestamp: new Date().toLocaleString('de-DE')
         };
 
         emailjs.send('lernarchiv', 'template_ezdxxvk', templateParams)
             .then(() => {
                 status.style.color = "#22c55e";
-                status.innerText = "Erfolgreich gesendet! Check dein Postfach.";
+                status.innerText = "Erfolgreich eingereicht!";
+                // Optional: Felder leeren nach Erfolg
+                document.getElementById('msgContainer').innerHTML = `
+                    <div class="info-row">
+                        <input type="text" class="msg-who" placeholder="Name">
+                        <input type="text" class="msg-text" placeholder="Grund / Nachricht">
+                        <button class="btn btn-del" onclick="this.parentElement.remove()">✕</button>
+                    </div>`;
             }, (err) => {
                 status.style.color = "#ef4444";
-                status.innerText = "Fehler: " + JSON.stringify(err);
+                status.innerText = "Fehler: " + (err.text || "Unbekannter Fehler");
+            })
+            .finally(() => {
+                btn.disabled = false;
             });
     }
 </script>
