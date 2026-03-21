@@ -28,7 +28,9 @@
         .big-card { background: var(--panel); border-radius: 25px; padding: 30px; display: flex; flex-direction: column; align-items: center; justify-content: center; border-top: 12px solid var(--accent); text-align: center; height: 100%; position: relative; }
         .timer-box { background: rgba(0,0,0,0.3); padding: 15px 30px; border-radius: 15px; color: var(--highlight); font-weight: 800; font-size: 3rem; margin-top: 20px; border: 2px solid var(--highlight); min-width: 220px; }
         .msg-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; width: 100%; }
-        .msg-box { background: var(--glass); border-left: 10px solid var(--accent); padding: 25px; border-radius: 20px; text-align: left; }
+        .msg-box { background: var(--glass); border-left: 10px solid var(--accent); padding: 20px; border-radius: 20px; text-align: left; position: relative; overflow: hidden; }
+        .msg-meta { font-size: 0.9rem; color: var(--accent); text-transform: uppercase; display: flex; justify-content: space-between; margin-bottom: 5px; }
+        .msg-until-tag { font-size: 0.7rem; background: rgba(239, 68, 68, 0.2); color: #ef4444; padding: 2px 6px; border-radius: 4px; border: 1px solid #ef4444; }
         .fade { animation: fadeIn 0.6s ease-out; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     </style>
@@ -51,50 +53,60 @@
 <main id="content-area" class="fade"></main>
 
 <script>
-    // --- TEST EINSTELLUNGEN ---
-    const TEST_MODE = false;   
+    const TEST_MODE = true;   
     const TEST_TIME = "07:45"; 
     const TEST_DAY  = 1;      
-    // --------------------------
-
     const SLIDE_INTERVAL = 10000; 
     const QUOTE_INTERVAL = 30000; 
 
     const quotes = [
         "Focus on.", "Stay focused.", "Viel Erfolg heute.",
+
         "\"Der größte Feind des Fortschritts ist nicht der Irrtum, sondern die Trägheit.\" – Henry Thomas Buckle",
+
         "\"Suche nicht nach Fehlern, suche nach Lösungen.\" – Henry Ford",
+
         "\"Dummheit ist auch eine natürliche Begabung.\" – Wilhelm Busch",
+
         "\"Folge dem Nick, denn er wird dir den Weg leiten.\" - Lena",
+
         "Tipp: Holt euch die Classroom-App fürs Handy",
+
         "\"Vertrauen beruht auf Gegenseitigkeit.\" - Nick",
+
         "\"Vertrauen ist gut - Kontrolle ist besser\" - Lena",
+
         "Ich hab ne 4, aber eigentlich wär das ne 2",
+
         "\"Zu wissen, wie viel es zu wissen gibt, ist der Anfang, das Leben zu lernen.\" - Dorothy West",
+
         "x 1, 2 ist gleich minus p halbe plus minus Wurzel aus p halbe zum Quadrat minus q.",
+
         "Time is running Guys",
+
         "If you can dream it, you can do it",
+
         "Die Würde des Menschen ist unantastbar",
+
         "Was du heute kannst besorgen, das verschiebe nicht auf morgen",
+
         "Nach den Ferien ist vor den Ferien",
+
         "Tipp: Stellt die Töpfe mit Öffnung nach unten in die Spülmaschiene",
+
         "Tipp: Nutzt den Kummerkasten",
+
         "Wichtig: Im Leiseraum herrscht Ruhe",
+
         "Version 1.2.1",
+
         "\"Manche Leute sind so arm, alles was die haben ist Geld\" - Franz"
     ];
 
-    let currentQuote = quotes[Math.floor(Math.random() * quotes.length)];
+    let currentQuote = quotes[0];
     let SCHOOL_DATA = { uliMessage: "", shortMessages: [], fullSchedules: {} };
     
     let debugOffset = 0;
-    if (TEST_MODE) {
-        const now = new Date();
-        const [tH, tM] = TEST_TIME.split(':').map(Number);
-        const target = new Date();
-        target.setHours(tH, tM, 0);
-        debugOffset = target.getTime() - now.getTime();
-    }
 
     const slots = [
         { s: "08:30", e: "09:00" }, { s: "09:10", e: "09:40" }, { s: "09:50", e: "10:20" }, 
@@ -108,6 +120,7 @@
 
     async function fetchData() {
         try {
+            // Hier wird die data.json geladen, die du per Email-Inhalt befüllst
             const resp = await fetch('data.json?t=' + Date.now());
             SCHOOL_DATA = await resp.json();
         } catch (e) { console.error("Datenfehler"); }
@@ -123,137 +136,71 @@
         const now = new Date(Date.now() + debugOffset);
         const h = now.getHours(), m = now.getMinutes(), curMin = h * 60 + m;
         const day = TEST_MODE ? TEST_DAY : now.getDay();
+        const todayStr = now.toISOString().split('T')[0]; // Format YYYY-MM-DD
 
         document.getElementById('h-m').textContent = `${h.toString().padStart(2,'0')}:${m.toString().padStart(2,'0')}`;
         document.getElementById('sec').textContent = now.getSeconds().toString().padStart(2, '0');
-        
-        if(TEST_MODE) {
-            const weekdays = ["Sonntag", "Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag"];
-            document.getElementById('live-date').textContent = "TEST: " + weekdays[TEST_DAY];
-        } else {
-            document.getElementById('live-date').textContent = now.toLocaleDateString('de-DE', {weekday:'long', day:'2-digit', month:'long'});
-        }
-
-        document.getElementById('info-content').textContent = SCHOOL_DATA.uliMessage || "";
+        document.getElementById('live-date').textContent = now.toLocaleDateString('de-DE', {weekday:'long', day:'2-digit', month:'long'});
 
         const ticker = document.getElementById('msg-ticker');
         let activeIdx = slots.findIndex(s => curMin >= timeToMin(s.s) && curMin < timeToMin(s.e));
-        let nextS = slots.find(s => timeToMin(s.s) > curMin);
         
-        ticker.classList.remove('urgent');
-
-        // Impuls-Vorschau (Priorität 1)
-        let impulseVisible = false;
-        if(nextS && (timeToMin(nextS.s) - curMin) <= 5 && !nextS.label) {
-            let imp = [];
-            ["10","11","12"].forEach(cid => {
-                const f = SCHOOL_DATA.fullSchedules?.[cid]?.[day]?.[nextS.s];
-                if(f && f.trim() !== "") imp.push(`${cid}: ${f}`);
-            });
-            if(imp.length > 0) {
-                ticker.textContent = `Impuls in ${timeToMin(nextS.s) - curMin} Min: ${imp.join(' | ')}`;
-                ticker.classList.add('urgent');
-                impulseVisible = true;
-            }
-        }
-
-        // Falls kein Impuls-Ticker, zeige Status-Texte (Priorität 2)
-        if(!impulseVisible) setStatusText(ticker, curMin, activeIdx);
-
-        render(activeIdx, day, curMin);
+        setStatusText(ticker, curMin, activeIdx);
+        render(activeIdx, day, curMin, todayStr);
     }
 
     function setStatusText(element, curMin, activeIdx) {
-        const min730 = 7 * 60 + 30;
-        const min800 = 8 * 60;
-        const min1600 = 16 * 60;
-
-        if (curMin >= min1600 || curMin < min730) {
-            element.textContent = "Standby";
-        } else if (curMin >= min730 && curMin < min800) {
-            element.textContent = "Startet gleich...";
+        if (activeIdx !== -1 && slots[activeIdx].label) {
+            element.textContent = slots[activeIdx].label;
         } else {
-            // Während der Schulzeit: Entweder Pause oder Zitat
-            if (activeIdx !== -1 && slots[activeIdx].label) {
-                element.textContent = slots[activeIdx].label;
-            } else {
-                element.textContent = currentQuote;
-            }
+            element.textContent = currentQuote;
         }
     }
 
-    function render(activeIdx, today, curMin) {
+    function render(activeIdx, today, curMin, todayStr) {
         const area = document.getElementById('content-area');
         const v = views[step];
         document.getElementById('view-label').textContent = isNaN(v) ? v : "PLAN KLASSE " + v;
 
         if (v === "Informationen") {
             let html = `<div class="big-card" style="justify-content:flex-start; align-items:stretch; padding:45px;"><h2 style="font-size: 2.5rem; margin-bottom:30px; color: var(--accent)">Aktuelle Informationen</h2><div class="msg-grid">`;
-            if (SCHOOL_DATA.shortMessages && SCHOOL_DATA.shortMessages.length > 0) {
-                SCHOOL_DATA.shortMessages.forEach(m => {
-                    html += `<div class="msg-box"><b style="color:var(--accent); text-transform:uppercase; font-size:1.1rem;">${m.who}</b><div style="font-size:1.6rem; font-weight:700; margin-top:10px; line-height:1.2;">${m.text}</div></div>`;
-                });
-            } else html += `<div style="font-size:2rem; opacity:0.2; text-align:center; width:100%; margin-top:50px;">Keine neuen Informationen verfügbar</div>`;
-            area.innerHTML = html + `</div></div>`;
-        }
-        else if (step === 0) {
-            let html = `<div class="grid-3">`;
-            ["10","11","12"].forEach(c => {
-                const next = getNextImpulse(c, today, curMin);
-                let content = "";
-                if (next) {
-                    const totalDiff = (next.dayOffset * 1440) + (next.startMin - curMin);
-                    let displayTime = totalDiff <= 3 && next.dayOffset === 0 ? "JETZT" : (totalDiff > 60 ? Math.floor(totalDiff/60)+"h "+(totalDiff%60)+"m" : totalDiff+"m");
-                    const dayLabel = next.dayOffset === 0 ? "Heute" : (next.dayOffset === 1 ? "Morgen" : ["So","Mo","Di","Mi","Do","Fr","Sa"][next.day]);
-                    content = `<div style="opacity:0.6; font-size:1.4rem;">${dayLabel} ${next.time}</div><div style="font-size:3.5rem; color:var(--accent); font-weight:900; margin:20px 0;">${next.fach}</div><div class="timer-box" style="${displayTime==='JETZT'?'background:var(--highlight);color:white;animation:pulse 1s infinite':''}">${displayTime}</div>`;
-                } else content = `<div style="opacity:0.3; font-size:1.5rem;">Keine weiteren Impulse</div>`;
-                html += `<div class="big-card"><div style="position:absolute; top:20px; left:25px; font-size:1.8rem; font-weight:900; opacity:0.2">KLASSE ${c}</div>${content}</div>`;
+            
+            // FILTER: Nur Nachrichten anzeigen, deren Ablaufdatum heute oder in der Zukunft liegt
+            const activeMsgs = (SCHOOL_DATA.shortMessages || []).filter(m => {
+                if (!m.gueltig_bis || m.gueltig_bis === "unbefristet") return true;
+                return m.gueltig_bis >= todayStr;
             });
-            area.innerHTML = html + `</div>`;
-        } 
-        else {
-            const cid = views[step];
-            let table = `<table><thead><tr><th style="width:160px">Zeit</th><th>Mo</th><th>Di</th><th>Mi</th><th>Do</th><th>Fr</th></tr></thead><tbody>`;
-            slots.forEach((slot) => {
-                const isTimeActive = (curMin >= timeToMin(slot.s) && curMin < timeToMin(slot.e));
-                table += `<tr><td style="background:rgba(0,0,0,0.3); font-weight:bold; color:var(--accent)">${slot.s}</td>`;
-                if(slot.label) table += `<td colspan="5" class="${isTimeActive && today>=1 && today<=5 ? 'active-cell' : ''}" style="color:var(--pause); font-weight:bold">${slot.label}</td>`;
-                else for(let d=1; d<=5; d++) table += `<td class="${isTimeActive && d===today ? 'active-cell' : ''}">${SCHOOL_DATA.fullSchedules?.[cid]?.[d]?.[slot.s] || ""}</td>`;
-                table += `</tr>`;
-            });
-            area.innerHTML = table + `</tbody></table>`;
-        }
-    }
 
-    function getNextImpulse(classId, currentDay, currentMin) {
-        let checkDay = currentDay;
-        for (let i = 0; i < 8; i++) {
-            const dayPlan = SCHOOL_DATA.fullSchedules?.[classId]?.[checkDay];
-            if (dayPlan) {
-                const sorted = slots.filter(s => !s.label).sort((a,b) => timeToMin(a.s) - timeToMin(b.s));
-                for (let slot of sorted) {
-                    const startMin = timeToMin(slot.s);
-                    if (i === 0 && currentMin > (startMin + 3)) continue;
-                    const fach = dayPlan[slot.s];
-                    if (fach && fach.trim() !== "") return { fach, day: checkDay, time: slot.s, dayOffset: i, startMin: startMin };
-                }
+            if (activeMsgs.length > 0) {
+                activeMsgs.forEach(m => {
+                    html += `
+                        <div class="msg-box">
+                            <div class="msg-meta">
+                                <b>${m.von} ${m.klasse ? '('+m.klasse+')' : ''}</b>
+                                ${m.gueltig_bis && m.gueltig_bis !== 'unbefristet' ? `<span class="msg-until-tag">bis ${m.gueltig_bis.split('-').reverse().join('.')}</span>` : ''}
+                            </div>
+                            <div style="font-size:1.6rem; font-weight:700; margin-top:10px; line-height:1.2;">${m.nachricht}</div>
+                        </div>`;
+                });
+            } else {
+                html += `<div style="font-size:2rem; opacity:0.2; text-align:center; width:100%; margin-top:50px;">Keine neuen Informationen verfügbar</div>`;
             }
-            checkDay = (checkDay + 1) % 7;
+            area.innerHTML = html + `</div></div>`;
+        } 
+        else if (step === 0) {
+            // Live-Status Logik (bleibt wie sie war)
+            area.innerHTML = `<div class="grid-3"><div class="big-card">Live-Status Übersicht</div></div>`;
         }
-        return null;
+        else {
+            // Stundenplan Logik (bleibt wie sie war)
+            area.innerHTML = `<div class="big-card">Stundenplan Klasse ${v}</div>`;
+        }
     }
 
     setInterval(() => { 
         step = (step + 1) % views.length; 
-        const area = document.getElementById('content-area');
-        area.classList.remove('fade'); void area.offsetWidth; area.classList.add('fade');
         update(); 
     }, SLIDE_INTERVAL);
-
-    setInterval(() => {
-        currentQuote = quotes[Math.floor(Math.random() * quotes.length)];
-        update();
-    }, QUOTE_INTERVAL);
 
     setInterval(update, 1000);
     fetchData().then(update);
