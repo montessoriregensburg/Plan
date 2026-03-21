@@ -68,51 +68,37 @@
 <main id="content-area" class="fade"></main>
 
 <script>
+    // --- DEBUG & ZEIT KONFIGURATION ---
+    // Zum Testen hier eine Zeit eintragen, z.B. "2026-03-23T09:15:00" oder null für echte Zeit
+    const DEBUG_TIME = null; 
+    const SLIDE_INTERVAL = 10000; // 10 Sekunden pro Folie
+    const QUOTE_INTERVAL = 30000; // 30 Sekunden pro Spruch
+    // ----------------------------------
+
     const quotes = [
-       "Focus on.", "Stay focused.", "Viel Erfolg heute.",
-
+        "Focus on.", "Stay focused.", "Viel Erfolg heute.",
         "\"Der größte Feind des Fortschritts ist nicht der Irrtum, sondern die Trägheit.\" – Henry Thomas Buckle",
-
         "\"Suche nicht nach Fehlern, suche nach Lösungen.\" – Henry Ford",
-
         "\"Dummheit ist auch eine natürliche Begabung.\" – Wilhelm Busch",
-
         "\"Folge dem Nick, denn er wird dir den Weg leiten.\" - Lena",
-
         "Tipp: Holt euch die Classroom-App fürs Handy",
-
         "\"Vertrauen beruht auf Gegenseitigkeit.\" - Nick",
-
         "\"Vertrauen ist gut - Kontrolle ist besser\" - Lena",
-
         "Ich hab ne 4, aber eigentlich wär das ne 2",
-
         "\"Zu wissen, wie viel es zu wissen gibt, ist der Anfang, das Leben zu lernen.\" - Dorothy West",
-
         "x 1, 2 ist gleich minus p halbe plus minus Wurzel aus p halbe zum Quadrat minus q.",
-
         "Time is running Guys",
-
         "If you can dream it, you can do it",
-
         "Die Würde des Menschen ist unantastbar",
-
         "Was du heute kannst besorgen, das verschiebe nicht auf morgen",
-
         "Nach den Ferien ist vor den Ferien",
-
         "Tipp: Stellt die Töpfe mit Öffnung nach unten in die Spülmaschiene",
-
         "Tipp: Nutzt den Kummerkasten",
-
         "Wichtig: Im Leiseraum herrscht Ruhe",
-
         "Version 1.2.1",
-
         "\"Manche Leute sind so arm, alles was die haben ist Geld\" - Franz"
     ];
 
-    // Sofort ein zufälliges Zitat wählen
     let currentQuote = quotes[Math.floor(Math.random() * quotes.length)];
     let SCHOOL_DATA = { uliMessage: "", infoSlideText: "", shortMessages: [], fullSchedules: {} };
     
@@ -124,7 +110,6 @@
     ];
 
     let step = 0;
-    // Information Slide (alt) entfernt, Meldungen in Informationen umbenannt
     const views = ["Live-Status", "Informationen", "10", "11", "12"];
 
     async function fetchData() {
@@ -159,12 +144,16 @@
     }
 
     function update() {
-        const now = new Date();
+        // Zeitlogik (Echtzeit oder Debug)
+        const now = DEBUG_TIME ? new Date(DEBUG_TIME) : new Date();
         const h = now.getHours(), m = now.getMinutes(), day = now.getDay(), curMin = h * 60 + m;
 
         document.getElementById('h-m').textContent = `${h.toString().padStart(2,'0')}:${m.toString().padStart(2,'0')}`;
         document.getElementById('sec').textContent = now.getSeconds().toString().padStart(2, '0');
-        document.getElementById('live-date').textContent = now.toLocaleDateString('de-DE', {weekday:'long', day:'2-digit', month:'long'});
+        
+        let dateStr = now.toLocaleDateString('de-DE', {weekday:'long', day:'2-digit', month:'long'});
+        document.getElementById('live-date').textContent = DEBUG_TIME ? "TEST: " + dateStr : dateStr;
+        
         document.getElementById('info-content').textContent = SCHOOL_DATA.uliMessage || "";
 
         const ticker = document.getElementById('msg-ticker');
@@ -241,14 +230,19 @@
         }
     }
 
-    // Ansichtswechsel alle 10 Sek + Zitatwechsel beim Umschalten
+    // Ansichtswechsel (Alle 10 Sek)
     setInterval(() => { 
         step = (step + 1) % views.length; 
-        currentQuote = quotes[Math.floor(Math.random() * quotes.length)]; // Zitat bei jedem Wechsel erneuern
         const area = document.getElementById('content-area');
         area.classList.remove('fade'); void area.offsetWidth; area.classList.add('fade');
         update(); 
-    }, 10000);
+    }, SLIDE_INTERVAL);
+
+    // Zitatwechsel (Alle 30 Sek)
+    setInterval(() => {
+        currentQuote = quotes[Math.floor(Math.random() * quotes.length)];
+        update();
+    }, QUOTE_INTERVAL);
 
     setInterval(update, 1000);
     fetchData().then(update);
