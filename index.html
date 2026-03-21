@@ -199,7 +199,7 @@
             area.innerHTML = html + (activeMsgs.length === 0 ? '<div style="opacity:0.2; font-size:2rem; margin-top:50px;">Keine Infos</div>' : '') + `</div></div>`;
         }
         else if (v === "Lehrer") {
-            let html = `<div class="big-card" style="justify-content:flex-start; align-items:stretch; padding:45px;"><h2 style="font-size: 2.5rem; margin-bottom:30px; color: var(--info-color)">Lehrer Präsenz (Live)</h2><div class="msg-grid">`;
+            let html = `<div class="big-card" style="justify-content:flex-start; align-items:stretch; padding:45px;"><h2 style="font-size: 2.5rem; margin-bottom:30px; color: var(--info-color)">Lehrer im Haus</h2><div class="msg-grid">`;
             let count = 0;
             if (SCHOOL_DATA.lehrerPlan) {
                 SCHOOL_DATA.lehrerPlan.forEach(l => {
