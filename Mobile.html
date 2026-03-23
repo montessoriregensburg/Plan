@@ -3,168 +3,144 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Campus Planer</title>
+    <title>Schul-Plan</title>
     <style>
-        :root {
-            --bg: #0b0f1a; --card: #161e2d; --accent: #38bdf8;
-            --text: #ffffff; --sub: #94a3b8; --highlight: #10b981;
-            --k11: #a855f7;
-        }
+        :root { --bg: #000; --card: #1a1a1a; --accent: #007bff; --text: #fff; --grey: #888; }
+        * { box-sizing: border-box; font-family: sans-serif; }
+        body { background: var(--bg); color: var(--text); margin: 0; padding: 10px; }
 
-        * { box-sizing: border-box; font-family: 'Inter', -apple-system, sans-serif; }
-        body { background: var(--bg); color: var(--text); margin: 0; padding-bottom: 90px; }
+        /* News Box statt Ticker */
+        .news-box { background: #222; border: 1px solid var(--accent); padding: 10px; border-radius: 8px; margin-bottom: 15px; font-size: 0.9rem; }
+        .news-title { color: var(--accent); font-weight: bold; font-size: 0.7rem; text-transform: uppercase; }
 
-        /* Modern Header */
-        header { padding: 20px; background: var(--card); border-radius: 0 0 25px 25px; box-shadow: 0 4px 20px rgba(0,0,0,0.3); }
-        .clock { font-size: 2.5rem; font-weight: 800; text-align: center; display: block; letter-spacing: -1px; }
-        .news-pill { background: rgba(56, 189, 248, 0.1); color: var(--accent); padding: 6px 15px; border-radius: 20px; font-size: 0.75rem; margin-top: 10px; text-align: center; border: 1px solid rgba(56, 189, 248, 0.2); }
+        /* Impuls Timer */
+        .impuls-area { text-align: center; margin-bottom: 20px; padding: 15px; background: var(--card); border-radius: 12px; }
+        .timer { font-size: 3rem; font-weight: bold; color: var(--accent); }
 
-        /* Nav Bar */
-        nav { position: fixed; bottom: 20px; left: 20px; right: 20px; background: rgba(22, 30, 45, 0.9); backdrop-filter: blur(10px); display: flex; justify-content: space-around; padding: 12px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.1); z-index: 1000; }
-        .nav-item { color: var(--sub); text-decoration: none; font-size: 0.65rem; display: flex; flex-direction: column; align-items: center; gap: 4px; }
-        .nav-item.active { color: var(--accent); }
-        .nav-item i { font-size: 1.2rem; }
+        /* Navigation Tabs */
+        .tabs { display: flex; background: #111; padding: 5px; border-radius: 10px; margin-bottom: 20px; }
+        .tab-btn { flex: 1; border: none; background: none; color: var(--grey); padding: 10px; font-weight: bold; font-size: 0.8rem; }
+        .tab-btn.active { background: var(--card); color: #fff; border-radius: 8px; }
 
-        .page { display: none; padding: 20px; animation: slideUp 0.3s ease-out; }
+        .page { display: none; }
         .page.active { display: block; }
-        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* Impuls Card */
-        .impuls-hero { background: linear-gradient(135deg, #1e293b, #0f172a); padding: 40px 20px; border-radius: 24px; text-align: center; position: relative; overflow: hidden; border: 1px solid rgba(255,255,255,0.05); }
-        .timer-big { font-size: 4rem; font-weight: 900; color: var(--accent); margin: 10px 0; }
+        /* Lehrer Liste - Extrem Kompakt */
+        .l-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        .l-table th { text-align: left; color: var(--grey); font-size: 0.7rem; padding: 5px; border-bottom: 1px solid #333; }
+        .l-table td { padding: 10px 5px; border-bottom: 1px solid #222; font-size: 0.85rem; }
+        .now-badge { background: #28a745; color: #000; padding: 2px 5px; border-radius: 4px; font-size: 0.7rem; font-weight: bold; }
+        .k11-tag { color: #a855f7; font-weight: bold; }
 
-        /* Timeline Plan (Mobile Optimized) */
-        .day-selector { display: flex; justify-content: space-between; margin-bottom: 20px; background: var(--card); padding: 5px; border-radius: 12px; }
-        .day-btn { flex: 1; border: none; background: none; color: var(--sub); padding: 8px; font-size: 0.8rem; border-radius: 8px; }
-        .day-btn.active { background: var(--accent); color: var(--bg); font-weight: bold; }
-
-        .timeline { position: relative; }
-        .timeline-item { display: flex; gap: 15px; margin-bottom: 15px; }
-        .time-col { min-width: 60px; font-size: 0.75rem; color: var(--accent); font-weight: bold; padding-top: 4px; }
-        .task-col { flex: 1; background: var(--card); padding: 12px; border-radius: 12px; border-left: 4px solid var(--accent); }
-        .task-col.now { border-left-color: var(--highlight); background: rgba(16, 185, 129, 0.1); }
-
-        /* Lehrer Cards Modern */
-        .lehrer-grid { display: grid; gap: 12px; }
-        .l-card { background: var(--card); padding: 15px; border-radius: 16px; border: 1px solid rgba(255,255,255,0.05); }
-        .l-header { display: flex; justify-content: space-between; align-items: flex-start; }
-        .l-status { width: 8px; height: 8px; border-radius: 50%; display: inline-block; background: #334155; }
-        .l-status.online { background: var(--highlight); box-shadow: 0 0 10px var(--highlight); }
-        .l-chips { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 10px; }
-        .chip { font-size: 0.6rem; padding: 3px 8px; border-radius: 6px; background: rgba(255,255,255,0.05); color: var(--sub); }
-        .chip.highlight { background: var(--k11); color: white; }
-
+        /* Plan Liste */
+        .plan-item { display: flex; justify-content: space-between; padding: 12px; background: var(--card); margin-bottom: 5px; border-radius: 8px; }
+        .day-nav { display: flex; gap: 5px; margin-bottom: 10px; overflow-x: auto; }
+        .day-btn { background: #222; color: #fff; border: none; padding: 8px 15px; border-radius: 5px; font-size: 0.7rem; }
+        .day-btn.active { background: var(--accent); }
     </style>
 </head>
 <body>
 
-<header>
-    <span class="clock" id="clock">00:00</span>
-    <div class="news-pill" id="news-pill">Lade Updates...</div>
-</header>
+<div class="news-box">
+    <div class="news-title">Short Messages</div>
+    <div id="msg-list">Keine Nachrichten</div>
+</div>
 
-<section id="p-impuls" class="page active">
-    <div class="impuls-hero">
-        <div style="font-size: 0.8rem; text-transform: uppercase; letter-spacing: 2px; color: var(--sub)">Nächster Impuls</div>
-        <div class="timer-big" id="timer">--</div>
-        <div id="next-subject" style="font-weight: 600">---</div>
+<div class="impuls-area">
+    <div style="font-size: 0.7rem; color: var(--grey);">NÄCHSTER IMPULS IN</div>
+    <div class="timer" id="timer">--:--</div>
+    <div id="next-info" style="font-size: 0.9rem;">Lade...</div>
+</div>
+
+<div class="tabs">
+    <button class="tab-btn active" onclick="showPage('plan', this)">STUNDENPLAN</button>
+    <button class="tab-btn" onclick="showPage('lehrer', this)">LEHRER-STATUS</button>
+</div>
+
+<div id="page-plan" class="page active">
+    <div class="day-nav">
+        <button class="day-btn active" onclick="setPlanDay(1, this)">MO</button>
+        <button class="day-btn" onclick="setPlanDay(2, this)">DI</button>
+        <button class="day-btn" onclick="setPlanDay(3, this)">MI</button>
+        <button class="day-btn" onclick="setPlanDay(4, this)">DO</button>
+        <button class="day-btn" onclick="setPlanDay(5, this)">FR</button>
     </div>
-</section>
+    <div id="plan-content"></div>
+</div>
 
-<section id="p-plan" class="page">
-    <div class="day-selector" id="day-selector">
-        <button class="day-btn active" onclick="setDay(1)">MO</button>
-        <button class="day-btn" onclick="setDay(2)">DI</button>
-        <button class="day-btn" onclick="setDay(3)">MI</button>
-        <button class="day-btn" onclick="setDay(4)">DO</button>
-        <button class="day-btn" onclick="setDay(5)">FR</button>
-    </div>
-    <div class="timeline" id="timeline"></div>
-</section>
-
-<section id="p-lehrer" class="page">
-    <div class="lehrer-grid" id="lehrer-list"></div>
-</section>
-
-<nav>
-    <div class="nav-item active" onclick="tab('impuls', this)"><span>⏱️</span><span>Impuls</span></div>
-    <div class="nav-item" onclick="tab('plan', this)"><span>📅</span><span>Plan</span></div>
-    <div class="nav-item" onclick="tab('lehrer', this)"><span>👥</span><span>Lehrer</span></div>
-</nav>
+<div id="page-lehrer" class="page">
+    <table class="l-table">
+        <thead>
+            <tr>
+                <th>LEHRER</th>
+                <th>HEUTE ANWESEND</th>
+            </tr>
+        </thead>
+        <tbody id="lehrer-tbody"></tbody>
+    </table>
+</div>
 
 <script>
-    let SCHOOL_DATA = {};
+    let DATA = {};
     let currentDay = new Date().getDay() || 1;
     if(currentDay > 5) currentDay = 1;
 
     async function init() {
         const r = await fetch('data.json?t=' + Date.now());
-        SCHOOL_DATA = await r.json();
+        DATA = await r.json();
         
-        document.getElementById('news-pill').innerText = SCHOOL_DATA.shortMessages[0] || "Keine Meldungen";
-        
-        renderPlan();
+        document.getElementById('msg-list').innerText = DATA.shortMessages.join(" | ") || "Alles normal.";
         renderLehrer();
+        renderPlan(currentDay);
         tick();
     }
 
-    function tab(p, el) {
+    function showPage(p, btn) {
         document.querySelectorAll('.page').forEach(pg => pg.classList.remove('active'));
-        document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-        document.getElementById('p-' + p).classList.add('active');
-        el.classList.add('active');
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById('page-' + p).classList.add('active');
+        btn.classList.add('active');
     }
 
-    function setDay(d) {
-        currentDay = d;
-        document.querySelectorAll('.day-btn').forEach((b, i) => b.classList.toggle('active', i+1 === d));
-        renderPlan();
+    function setPlanDay(d, btn) {
+        document.querySelectorAll('.day-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        renderPlan(d);
     }
 
-    function renderPlan() {
-        const plan = SCHOOL_DATA.fullSchedules["11"][currentDay] || {};
-        const container = document.getElementById('timeline');
-        const sortedTimes = Object.keys(plan).sort();
-
-        container.innerHTML = sortedTimes.map(t => `
-            <div class="timeline-item">
-                <div class="time-col">${t}</div>
-                <div class="task-col">
-                    <div style="font-weight:bold; font-size:0.9rem">${plan[t]}</div>
-                </div>
+    function renderPlan(d) {
+        const p = DATA.fullSchedules["11"][d] || {};
+        document.getElementById('plan-content').innerHTML = Object.keys(p).sort().map(t => `
+            <div class="plan-item">
+                <span style="color:var(--accent); font-weight:bold;">${t}</span>
+                <span>${p[t]}</span>
             </div>
         `).join('');
     }
 
     function renderLehrer() {
-        const container = document.getElementById('lehrer-list');
         const today = new Date().getDay();
         const curMin = new Date().getHours() * 60 + new Date().getMinutes();
-
-        container.innerHTML = SCHOOL_DATA.lehrerPlan.map(l => {
-            let isOnline = false;
-            const todayTimes = l.zeiten[today] || [];
-            todayTimes.forEach(z => {
-                if(curMin >= toMin(z[0]) && curMin < toMin(z[1])) isOnline = true;
-            });
-
-            const chips = todayTimes.filter(z => z[0]).map(z => `
-                <span class="chip ${z[2]==='11'?'highlight':''}">
-                    ${z[0]} ${z[2] ? '('+z[2]+')' : ''}
-                </span>
-            `).join('');
+        
+        document.getElementById('lehrer-tbody').innerHTML = DATA.lehrerPlan.map(l => {
+            let times = l.zeiten[today] || [];
+            let isPresent = times.some(z => curMin >= toMin(z[0]) && curMin < toMin(z[1]));
+            
+            let timeString = times.filter(z => z[0]).map(z => 
+                `<span class="${z[2]=='11'?'k11-tag':''}">${z[0]}-${z[1]}</span>`
+            ).join(", ");
 
             return `
-                <div class="l-card">
-                    <div class="l-header">
-                        <div>
-                            <div style="font-weight:800; font-size:1rem">${l.name}</div>
-                            <div style="color:var(--sub); font-size:0.7rem">${l.fach}</div>
-                        </div>
-                        <span class="l-status ${isOnline?'online':''}"></span>
-                    </div>
-                    <div class="l-chips">${chips || '<span class="chip">Heute nicht da</span>'}</div>
-                </div>
+                <tr>
+                    <td>
+                        <b>${l.name}</b><br>
+                        <small style="color:var(--grey)">${l.fach}</small>
+                    </td>
+                    <td>
+                        ${isPresent ? '<span class="now-badge">JETZT DA</span><br>' : ''}
+                        <div style="font-size:0.75rem; margin-top:3px;">${timeString || 'Kein Dienst'}</div>
+                    </td>
+                </tr>
             `;
         }).join('');
     }
@@ -172,25 +148,23 @@
     function tick() {
         const now = new Date();
         const curMin = now.getHours() * 60 + now.getMinutes();
-        document.getElementById('clock').innerText = now.toLocaleTimeString('de-DE', {hour:'2-digit', minute:'2-digit'});
+        const plan = DATA.fullSchedules["11"][now.getDay()] || {};
+        
+        let next = null;
+        Object.keys(plan).sort().forEach(t => { if(toMin(t) > curMin && !next) next = t; });
 
-        // Impuls Update (Klasse 11)
-        const plan = SCHOOL_DATA.fullSchedules["11"][now.getDay()] || {};
-        let nextTime = null, nextSub = "Feierabend";
-        Object.keys(plan).sort().forEach(t => {
-            if(toMin(t) > curMin && !nextTime) { nextTime = t; nextSub = plan[t]; }
-        });
-
-        if(nextTime) {
-            document.getElementById('timer').innerText = (toMin(nextTime) - curMin) + "m";
-            document.getElementById('next-subject').innerText = nextSub;
+        if(next) {
+            let diff = toMin(next) - curMin;
+            document.getElementById('timer').innerText = diff + " MIN";
+            document.getElementById('next-info').innerText = "Bis: " + plan[next];
+        } else {
+            document.getElementById('timer').innerText = "--";
+            document.getElementById('next-info').innerText = "Keine Stunden mehr";
         }
-
         setTimeout(tick, 30000);
     }
 
     const toMin = t => { if(!t) return 0; const [h,m] = t.split(':').map(Number); return h*60+m; };
-
     init();
 </script>
 </body>
