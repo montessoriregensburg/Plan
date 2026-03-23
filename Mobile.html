@@ -13,65 +13,54 @@
             --grey: #94a3b8;
             --k11: #a855f7;
             --success: #10b981;
-            --active-row: rgba(59, 130, 246, 0.2);
+            --active-row: rgba(59, 130, 246, 0.25);
             --glass: rgba(255, 255, 255, 0.05);
         }
 
-        * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-        body { background: var(--bg); color: var(--text); margin: 0; padding-bottom: 100px; -webkit-font-smoothing: antialiased; }
+        * { box-sizing: border-box; font-family: -apple-system, sans-serif; }
+        body { background: var(--bg); color: var(--text); margin: 0; padding-bottom: 100px; }
 
-        /* Header */
-        header { padding: 20px; background: linear-gradient(180deg, #1e293b 0%, var(--bg) 100%); text-align: center; border-bottom: 1px solid var(--glass); }
-        h1 { margin: 0; font-size: 1.2rem; letter-spacing: 1px; color: var(--accent); text-transform: uppercase; }
-        #live-clock { font-size: 0.8rem; color: var(--grey); margin-top: 4px; font-variant-numeric: tabular-nums; }
+        header { padding: 20px; background: linear-gradient(180deg, #1e293b 0%, var(--bg) 100%); text-align: center; }
+        h1 { margin: 0; font-size: 1.1rem; letter-spacing: 1px; color: var(--accent); text-transform: uppercase; }
+        #live-clock { font-size: 1.2rem; font-weight: bold; color: #fff; margin-top: 5px; font-variant-numeric: tabular-nums; }
 
-        /* Navigation */
-        nav { position: fixed; bottom: 15px; left: 15px; right: 15px; background: var(--panel); display: flex; border-radius: 20px; border: 1px solid var(--glass); backdrop-filter: blur(15px); z-index: 1000; box-shadow: 0 15px 35px rgba(0,0,0,0.6); }
-        .nav-btn { flex: 1; padding: 15px 5px; border: none; background: none; color: var(--grey); font-size: 0.65rem; font-weight: 600; display: flex; flex-direction: column; align-items: center; gap: 5px; text-transform: uppercase; }
+        nav { position: fixed; bottom: 15px; left: 15px; right: 15px; background: var(--panel); display: flex; border-radius: 20px; border: 1px solid var(--glass); backdrop-filter: blur(15px); z-index: 1000; }
+        .nav-btn { flex: 1; padding: 15px 5px; border: none; background: none; color: var(--grey); font-size: 0.65rem; font-weight: 600; display: flex; flex-direction: column; align-items: center; gap: 5px; }
         .nav-btn.active { color: var(--accent); }
 
         .page { display: none; padding: 15px; animation: fadeIn 0.3s ease; }
         .page.active { display: block; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
-        /* Ticker Card */
-        .ticker-card { background: var(--panel); padding: 18px; border-radius: 18px; margin-bottom: 12px; border: 1px solid var(--glass); border-left: 4px solid var(--accent); position: relative; }
-        .class-tag { font-size: 0.65rem; color: var(--accent); background: rgba(59, 130, 246, 0.1); padding: 3px 8px; border-radius: 8px; font-weight: bold; }
-        .countdown { font-size: 2rem; font-weight: 800; margin: 8px 0; color: var(--success); }
+        .ticker-card { background: var(--panel); padding: 18px; border-radius: 18px; margin-bottom: 12px; border: 1px solid var(--glass); border-left: 4px solid var(--accent); }
+        .countdown { font-size: 1.8rem; font-weight: 800; color: var(--success); margin: 5px 0; }
 
-        /* Tabellen Design */
         .scroll-area { width: 100%; overflow-x: auto; border-radius: 15px; background: var(--panel); border: 1px solid var(--glass); }
         table { width: 100%; border-collapse: collapse; font-size: 0.75rem; min-width: 580px; }
         th, td { padding: 12px 10px; border: 1px solid var(--glass); text-align: left; }
-        th { background: rgba(255,255,255,0.03); color: var(--accent); font-size: 0.6rem; text-transform: uppercase; }
+        th { background: rgba(255,255,255,0.03); color: var(--accent); font-size: 0.6rem; }
         
-        /* Sticky Column & Row Highlighting */
-        td:first-child { font-weight: bold; background: #0a0e14; position: sticky; left: 0; z-index: 10; width: 75px; color: var(--grey); }
-        .is-now { background: var(--active-row) !important; color: #fff; box-shadow: inset 4px 0 0 var(--accent); }
-        .is-today { background: rgba(255,255,255,0.02); }
+        /* Markierungen */
+        td:first-child { font-weight: bold; background: #0a111a; position: sticky; left: 0; z-index: 10; color: var(--accent); }
+        .is-now { background: var(--active-row) !important; outline: 1px solid var(--accent); }
+        .is-today { background: rgba(255,255,255,0.03); }
 
-        /* Lehrer Status */
-        .status-dot { height: 8px; width: 8px; border-radius: 50%; display: inline-block; margin-right: 5px; background: #334155; }
-        .status-online { background: var(--success); box-shadow: 0 0 8px var(--success); }
-        .status-text { font-size: 0.65rem; font-weight: bold; text-transform: uppercase; vertical-align: middle; }
+        .status-dot { height: 8px; width: 8px; border-radius: 50%; display: inline-block; background: #334155; }
+        .online { background: var(--success); box-shadow: 0 0 8px var(--success); }
 
-        /* Selectors */
-        .selector { display: flex; gap: 8px; margin-bottom: 15px; overflow-x: auto; padding-bottom: 5px; }
-        .btn-opt { background: var(--panel); color: var(--text); border: 1px solid var(--glass); padding: 10px 18px; border-radius: 12px; font-size: 0.75rem; white-space: nowrap; }
-        .btn-opt.active { background: var(--accent); border-color: var(--accent); }
-
-        .k11 { color: var(--k11); font-weight: bold; }
+        .selector { display: flex; gap: 8px; margin-bottom: 15px; overflow-x: auto; }
+        .btn-opt { background: var(--panel); color: #fff; border: 1px solid var(--glass); padding: 10px 18px; border-radius: 12px; font-size: 0.75rem; white-space: nowrap; }
+        .btn-opt.active { background: var(--accent); }
     </style>
 </head>
 <body>
 
 <header>
     <h1>Schul-Info-Board</h1>
-    <div id="live-clock">00:00:00</div>
+    <div id="live-clock">--:--:--</div>
 </header>
 
 <section id="p-ticker" class="page active"></section>
-
 <section id="p-plan" class="page">
     <div class="selector">
         <button class="btn-opt active" onclick="setPlanClass('10', this)">KL 10</button>
@@ -85,7 +74,6 @@
         </table>
     </div>
 </section>
-
 <section id="p-lehrer" class="page">
     <div class="scroll-area">
         <table>
@@ -103,21 +91,89 @@
 
 <script>
     let DATA = {};
-    const toMin = t => { if(!t) return 0; const [h,m] = t.split(':').map(Number); return h*60+m; };
+    let currentClass = "10";
+    const toMin = t => { if(!t || !t.includes(':')) return 0; const [h,m] = t.split(':').map(Number); return h*60+m; };
 
     function formatTime(mTotal) {
         if (mTotal < 60) return mTotal + " Min";
         return Math.floor(mTotal / 60) + " Std " + (mTotal % 60) + " Min";
     }
 
+    // HAUPT-UPDATE FUNKTION
+    function refreshUI() {
+        const now = new Date();
+        const curMin = now.getHours() * 60 + now.getMinutes();
+        const today = now.getDay();
+        
+        // Uhrzeit im Header
+        document.getElementById('live-clock').innerText = now.toLocaleTimeString('de-DE');
+
+        // Ticker Logik
+        let tickerHtml = "";
+        ["10", "11", "12"].forEach(c => {
+            let found = false;
+            for(let o = 0; o < 7; o++) {
+                let d = (now.getDay() + o) % 7;
+                if(d === 0 || d === 6) continue;
+                const sched = DATA.fullSchedules[c][d] || {};
+                const times = Object.keys(sched).sort();
+                for(let t of times) {
+                    if(o === 0 && toMin(t) <= curMin) continue;
+                    const diff = (o * 1440) + (toMin(t) - curMin);
+                    tickerHtml += `<div class="ticker-card">
+                        <span style="font-size:0.7rem; color:var(--accent)">KLASSE ${c}</span>
+                        <div class="countdown">in ${formatTime(diff)}</div>
+                        <div style="font-weight:bold">${sched[t]}</div>
+                        <div style="color:var(--grey); font-size:0.75rem">${o==0?'Heute':o==1?'Morgen':['So','Mo','Di','Mi','Do','Fr','Sa'][d]}, ${t} Uhr</div>
+                    </div>`;
+                    found = true; break;
+                }
+                if(found) break;
+            }
+        });
+        document.getElementById('p-ticker').innerHTML = tickerHtml;
+
+        // Stundenplan Markierung
+        if(DATA.fullSchedules) {
+            const sched = DATA.fullSchedules[currentClass];
+            const times = [...new Set([1,2,3,4,5].flatMap(d => Object.keys(sched[d] || {})))].sort();
+            document.getElementById('plan-body').innerHTML = times.map(t => {
+                const tStart = toMin(t);
+                // Markiert Zeile, wenn aktuelle Zeit zwischen Start und Start + 90 Min liegt
+                const isNow = (today >= 1 && today <= 5) && (curMin >= tStart && curMin < tStart + 90);
+                return `<tr class="${isNow ? 'is-now' : ''}">
+                    <td>${t}</td>
+                    ${[1,2,3,4,5].map(d => `<td class="${d === today ? 'is-today' : ''}">${sched[d][t] || '-'}</td>`).join('')}
+                </tr>`;
+            }).join('');
+        }
+
+        // Lehrer Status
+        if(DATA.lehrerPlan) {
+            document.getElementById('lehrer-body').innerHTML = DATA.lehrerPlan.map(l => {
+                const isOnline = (l.zeiten[today] || []).some(z => curMin >= toMin(z[0]) && curMin < toMin(z[1]));
+                return `<tr>
+                    <td>
+                        <span class="status-dot ${isOnline ? 'online' : ''}"></span>
+                        <span style="font-size:0.6rem; font-weight:bold; color:${isOnline?'var(--success)':'var(--grey)'}">${isOnline?'DA':'WEG'}</span><br>
+                        <b>${l.name}</b>
+                    </td>
+                    ${[1,2,3,4,5].map(d => {
+                        const slots = (l.zeiten[d] || []).filter(z => z[0]).map(z => `<div>${z[0]}</div>`).join("");
+                        return `<td class="${d === today ? 'is-today' : ''}">${slots || '-'}</td>`;
+                    }).join("")}
+                </tr>`;
+            }).join('');
+        }
+    }
+
     async function load() {
-        const r = await fetch('data.json?v=' + Date.now());
-        DATA = await r.json();
-        renderLehrer();
-        setPlanClass('10', document.querySelector('.btn-opt'));
-        refresh();
-        setInterval(refresh, 30000);
-        setInterval(() => document.getElementById('live-clock').innerText = new Date().toLocaleTimeString(), 1000);
+        try {
+            const r = await fetch('data.json?v=' + Date.now());
+            DATA = await r.json();
+            refreshUI();
+            setInterval(refreshUI, 1000); // Jede Sekunde für die Uhr, Ticker berechnet sich mit
+        } catch(e) { console.error("Daten konnten nicht geladen werden."); }
     }
 
     function tab(p, btn) {
@@ -128,78 +184,10 @@
     }
 
     function setPlanClass(c, btn) {
+        currentClass = c;
         document.querySelectorAll('#p-plan .btn-opt').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
-        btn.dataset.class = c;
-        renderPlan(c);
-    }
-
-    function renderPlan(c) {
-        const sched = DATA.fullSchedules[c];
-        const now = new Date();
-        const curMin = now.getHours() * 60 + now.getMinutes();
-        const today = now.getDay();
-        const times = [...new Set([1,2,3,4,5].flatMap(d => Object.keys(sched[d] || {})))].sort();
-
-        document.getElementById('plan-body').innerHTML = times.map(t => {
-            const isNow = (today >= 1 && today <= 5) && (curMin >= toMin(t) && curMin < toMin(t) + 90); // Beispiel 90min Fenster
-            return `<tr class="${isNow ? 'is-now' : ''}">
-                <td>${t}</td>
-                ${[1,2,3,4,5].map(d => `<td class="${d === today ? 'is-today' : ''}">${sched[d][t] || '-'}</td>`).join('')}
-            </tr>`;
-        }).join('');
-    }
-
-    function renderLehrer() {
-        const now = new Date();
-        const curMin = now.getHours() * 60 + now.getMinutes();
-        const today = now.getDay();
-
-        document.getElementById('lehrer-body').innerHTML = DATA.lehrerPlan.map(l => {
-            let online = (l.zeiten[today] || []).some(z => curMin >= toMin(z[0]) && curMin < toMin(z[1]));
-            return `<tr>
-                <td>
-                    <span class="status-dot ${online ? 'status-online' : ''}"></span>
-                    <span class="status-text" style="color:${online ? 'var(--success)' : 'var(--grey)'}">${online ? 'Vor Ort' : 'Abwesend'}</span><br>
-                    <b style="font-size:0.9rem">${l.name}</b><br><small>${l.fach}</small>
-                </td>
-                ${[1,2,3,4,5].map(d => {
-                    const slots = (l.zeiten[d] || []).filter(z => z[0]).map(z => `<div class="${z[2]=='11'?'k11':''}">${z[0]}-${z[1]}</div>`).join("");
-                    return `<td class="${d === today ? 'is-today' : ''}">${slots || '-'}</td>`;
-                }).join("")}
-            </tr>`;
-        }).join('');
-    }
-
-    function refresh() {
-        const now = new Date();
-        const curMin = now.getHours() * 60 + now.getMinutes();
-        let html = "";
-
-        ["10", "11", "12"].forEach(c => {
-            let found = false;
-            for(let o = 0; o < 7; o++) {
-                let d = (now.getDay() + o) % 7;
-                if(d === 0 || d === 6) continue;
-                const sched = DATA.fullSchedules[c][d] || {};
-                for(let t of Object.keys(sched).sort()) {
-                    if(o === 0 && toMin(t) <= curMin) continue;
-                    const diff = (o * 1440) + (toMin(t) - curMin);
-                    html += `<div class="ticker-card">
-                        <span class="class-tag">KLASSE ${c}</span>
-                        <div class="countdown">${formatTime(diff)}</div>
-                        <div style="font-weight:bold">${sched[t]}</div>
-                        <div style="color:var(--grey); font-size:0.75rem">${o==0?'Heute':o==1?'Morgen':['So','Mo','Di','Mi','Do','Fr','Sa'][d]}, ${t} Uhr</div>
-                    </div>`;
-                    found = true; break;
-                }
-                if(found) break;
-            }
-        });
-        document.getElementById('ticker-content').innerHTML = html;
-        const activeClassBtn = document.querySelector('#p-plan .btn-opt.active');
-        if(activeClassBtn) renderPlan(activeClassBtn.dataset.class);
-        renderLehrer();
+        refreshUI();
     }
 
     load();
