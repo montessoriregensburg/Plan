@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Lehrer-Plan Mobil</title>
+    <style>
+        :root {
+            --bg: #0f172a; --panel: #1e293b; --text: #f8fafc;
+            --accent: #38bdf8; --highlight: #22c55e;
+            --k11: #a855f7; --glass: rgba(255, 255, 255, 0.05);
+            --nav-bg: #1e293b;
+        }
+
+        * { box-sizing: border-box; font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
+        body { background: var(--bg); color: var(--text); margin: 0; padding-bottom: 80px; overflow-x: hidden; }
+
+        /* Header */
+        header { text-align: center; padding: 15px; background: var(--panel); border-radius: 0 0 20px 20px; border-bottom: 3px solid var(--accent); margin-bottom: 15px; }
+        .time { font-size: 2rem; font-weight: 800; }
+        #date-display { opacity: 0.6; font-size: 0.8rem; }
+
+        /* Navigation */
+        nav { position: fixed; bottom: 0; left: 0; right: 0; background: var(--nav-bg); display: flex; justify-content: space-around; padding: 12px; border-top: 1px solid var(--glass); z-index: 100; }
+        .nav-item { color: #64748b; text-decoration: none; font-size: 0.75rem; display: flex; flex-direction: column; align-items: center; gap: 4px; cursor: pointer; }
+        .nav-item.active { color: var(--accent); font-weight: bold; }
+        .nav-icon { font-size: 1.2rem; }
+
+        /* Content Sections */
+        .page { display: none; padding: 15px; animation: fadeIn 0.3s ease; }
+        .page.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Ticker & Cards */
+        #quote-display { background: var(--accent); color: var(--bg); padding: 10px; border-radius: 8px; text-align: center; font-weight: 700; margin-bottom: 20px; font-size: 0.85rem; }
+        h2 { font-size: 1.1rem; text-transform: uppercase; border-left: 4px solid var(--accent); padding-left: 10px; margin: 20px 0; }
+
+        .lehrer-card { background: var(--panel); border-radius: 12px; padding: 15px; margin-bottom: 12px; border-left: 5px solid transparent; transition: 0.3s; }
+        .is-present { border-left-color: var(--highlight); }
+        .is-teaching-11 { border-left-color: var(--k11); }
+        .badge-11 { background: var(--k11); color: white; padding: 2px 6px; border-radius: 4px; font-size: 0.65rem; float: right; }
+        .status-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; margin-right: 6px; background: #444; }
+        .dot-online { background: var(--highlight); box-shadow: 0 0 8px var(--highlight); }
+
+        /* Plan Styles */
+        .plan-selector { display: flex; gap: 10px; margin-bottom: 15px; overflow-x: auto; padding-bottom: 5px; }
+        .btn-class { background: var(--panel); border: 1px solid var(--glass); color: white; padding: 8px 15px; border-radius: 20px; font-size: 0.8rem; }
+        .btn-class.active { background: var(--accent); color: var(--bg); border-color: var(--accent); }
+
+        .schedule-table { width: 100%; border-collapse: collapse; background: var(--panel); border-radius: 12px; overflow: hidden; font-size: 0.85rem; }
+        .schedule-table th, .schedule-table td { padding: 12px; text-align: left; border-bottom: 1px solid var(--glass); }
+        .schedule-table th { background: rgba(255,255,255,0.05); color: var(--accent); }
+
+        .mini-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px; margin-top: 10px; }
+        .day-box { background: var(--glass); text-align: center; padding: 4px; border-radius: 4px; font-size: 0.6rem; color: #64748b; }
+        .day-active { background: rgba(34, 197, 94, 0.2); color: var(--highlight); }
+
+        .info-box { background: var(--glass); border: 1px dashed var(--accent); padding: 15px; border-radius: 10px; margin-top: 10px; }
+    </style>
+</head>
+<body>
+
+<header>
+    <div id="date-display">---</div>
+    <div class="time" id="clock">00:00</div>
+</header>
+
+<section id="page-live" class="page active">
+    <div id="quote-display">Lade Status...</div>
+    <h2>Live Lehrer-Status</h2>
+    <div id="lehrer-container">Wird geladen...</div>
+</section>
+
+<section id="page-plans" class="page">
+    <h2>Stundenpläne</h2>
+    <div class="plan-selector" id="class-selector">
+        <button class="btn-class active" onclick="showPlan('10')">Klasse 10</button>
+        <button class="btn-class" onclick="showPlan('11')">Klasse 11</button>
+        <button class="btn-class" onclick="showPlan('12')">Klasse 12</button>
+    </div>
+    <div id="plan-container">
+        </div>
+</section>
+
+<section id="page-info" class="page">
+    <h2>Info Board</h2>
+    <div class="info-box" id="uli-msg">
+        <strong>Nachricht:</strong><br>
+        <span id="uli-text">Wird geladen...</span>
+    </div>
+    <div class="info-box" style="margin-top: 15px; border-color: var(--highlight);">
+        <strong>Letztes Update:</strong><br>
+        <span id="sync-time" style="font-size: 0.8rem; opacity: 0.7;">-</span>
+    </div>
+</section>
+
+<nav>
+    <div class="nav-item active" onclick="switchPage('live', this)">
+        <span class="nav-icon">⚡</span>
+        <span>Live</span>
+    </div>
+    <div class="nav-item" onclick="switchPage('plans', this)">
+        <span class="nav-icon">📅</span>
+        <span>Pläne</span>
+    </div>
+    <div class="nav-item" onclick="switchPage('info', this)">
+        <span class="nav-icon">ℹ️</span>
+        <span>Info</span>
+    </div>
+</nav>
+
+<script>
+    const quotes = ["Focus on.", "Viel Erfolg!", "Dummheit ist eine Begabung.", "Stay sharp!"];
+    let SCHOOL_DATA = {};
+    const daysShort = ["So", "Mo", "Di", "Mi", "Do", "Fr", "Sa"];
+
+    function timeToMin(t) {
+        if(!t || !t.includes(':')) return -1;
+        const [h, m] = t.split(':').map(Number);
+        return h * 60 + m;
+    }
+
+    // Navigation Steuerung
+    function switchPage(pageId, el) {
+        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+        document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+        document.getElementById('page-' + pageId).classList.add('active');
+        el.classList.add('active');
+    }
+
+    async function loadData() {
+        try {
+            const r = await fetch('data.json?t=' + Date.now());
+            SCHOOL_DATA = await r.json();
+            renderLehrer();
+            showPlan('10'); // Standardmäßig 10er Plan laden
+            updateInfoBoard();
+        } catch(e) { console.error("Fehler beim Laden"); }
+    }
+
+    function renderLehrer() {
+        const now = new Date();
+        const curMin = now.getHours() * 60 + now.getMinutes();
+        const today = now.getDay();
+        
+        const container = document.getElementById('lehrer-container');
+        let html = "";
+
+        (SCHOOL_DATA.lehrerPlan || []).forEach(l => {
+            let isPresent = false;
+            let teaching11 = false;
+            
+            if(l.zeiten && l.zeiten[today]) {
+                l.zeiten[today].forEach(z => {
+                    const s = timeToMin(z[0]), e = timeToMin(z[1]);
+                    if(curMin >= s && curMin < e) {
+                        isPresent = true;
+                        if(z[2] === "11") teaching11 = true;
+                    }
+                });
+            }
+
+            html += `
+                <div class="lehrer-card ${isPresent ? 'is-present' : ''} ${teaching11 ? 'is-teaching-11' : ''}">
+                    ${teaching11 ? '<span class="badge-11">KLASSE 11</span>' : ''}
+                    <div class="lehrer-name">
+                        <span class="status-dot ${isPresent ? 'dot-online' : ''}"></span>
+                        ${l.name}
+                    </div>
+                    <div class="lehrer-sub">${l.fach}</div>
+                    <div class="mini-grid">
+                        ${[1,2,3,4,5].map(d => `
+                            <div class="day-box ${l.zeiten && l.zeiten[d] && l.zeiten[d].some(z => z[0]!=='') ? 'day-active' : ''}">
+                                ${daysShort[d]}
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+        });
+        container.innerHTML = html;
+    }
+
+    function showPlan(className) {
+        // Buttons stylen
+        document.querySelectorAll('.btn-class').forEach(b => {
+            b.classList.toggle('active', b.innerText.includes(className));
+        });
+
+        const today = new Date().getDay();
+        const plan = SCHOOL_DATA.fullSchedules[className][today] || SCHOOL_DATA.fullSchedules[className]["1"]; // Fallback Mo
+        
+        let html = `<p style="font-size: 0.8rem; margin-bottom: 10px;">Plan für <b>Heute (${daysShort[today]})</b>:</p>`;
+        html += `<table class="schedule-table"><tr><th>Zeit</th><th>Fach</th></tr>`;
+        
+        const sortedTimes = Object.keys(plan).sort();
+        sortedTimes.forEach(t => {
+            html += `<tr><td>${t}</td><td>${plan[t]}</td></tr>`;
+        });
+        html += `</table>`;
+        
+        document.getElementById('plan-container').innerHTML = html;
+    }
+
+    function updateInfoBoard() {
+        document.getElementById('uli-text').textContent = SCHOOL_DATA.uliMessage || "Keine Nachricht";
+        document.getElementById('sync-time').textContent = SCHOOL_DATA.timestamp || "-";
+    }
+
+    function updateTime() {
+        const now = new Date();
+        document.getElementById('clock').textContent = now.toLocaleTimeString('de-DE', {hour:'2-digit', minute:'2-digit'});
+        document.getElementById('date-display').textContent = now.toLocaleDateString('de-DE', {weekday:'long', day:'2-digit', month:'short'});
+        
+        if(now.getSeconds() % 30 === 0) {
+            document.getElementById('quote-display').textContent = quotes[Math.floor(Math.random() * quotes.length)];
+        }
+    }
+
+    setInterval(updateTime, 1000);
+    setInterval(loadData, 30000);
+    loadData();
+    updateTime();
+    document.getElementById('quote-display').textContent = quotes[0];
+</script>
+</body>
+</html>
