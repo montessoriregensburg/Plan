@@ -17,7 +17,6 @@
         .live-time { font-size: 5rem; font-weight: 800; font-variant-numeric: tabular-nums; }
         .seconds { font-size: 2rem; color: var(--accent); margin-left: 5px; opacity: 0.7; }
         
-        /* Ticker (Unten) */
         #msg-ticker { background: var(--accent); color: var(--bg); font-size: 1.8rem; font-weight: 800; text-align: center; height: 80px; display: flex; align-items: center; justify-content: center; text-transform: uppercase; padding: 0 40px; line-height: 1.2; transition: background 0.3s; }
         .ticker-urgent { background: var(--warning) !important; color: white !important; }
 
@@ -58,6 +57,7 @@
 <main id="content-area" class="fade"></main>
 
 <script>
+    // --- TEST SETUP ---
     const TEST_MODE = true;   
     const TEST_TIME = "08:26"; 
     const TEST_DAY  = 1;      
@@ -154,16 +154,19 @@
 
         const ticker = document.getElementById('msg-ticker');
         let urgentList = [];
+        let maxUrgentMin = 0;
+
         ["10","11","12"].forEach(c => {
             const n = getNextImpulse(c, day, curMin, curSecTotal);
             if(n && n.dayOffset === 0 && n.secondsDiff > 0 && n.secondsDiff <= 300) {
                 const minLeft = Math.ceil(n.secondsDiff / 60);
-                urgentList.push(`KL. ${c}: ${n.fach} IN ${minLeft} MIN.`);
+                maxUrgentMin = Math.max(maxUrgentMin, minLeft);
+                urgentList.push(`KL. ${c}: ${n.fach}`);
             }
         });
 
         if (urgentList.length > 0) {
-            ticker.textContent = "IMPULS STARTET: " + urgentList.join(" | ");
+            ticker.textContent = `IMPULS STARTET IN ${maxUrgentMin} MINUTEN: ` + urgentList.join(" | ");
             ticker.classList.add('ticker-urgent');
         } else {
             ticker.classList.remove('ticker-urgent');
