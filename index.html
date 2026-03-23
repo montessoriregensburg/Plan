@@ -13,28 +13,38 @@
         }
         * { box-sizing: border-box; cursor: none; font-family: 'Inter', sans-serif; }
         body { background: var(--bg); color: var(--text); margin: 0; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+        
+        /* Header Bereich */
         header { display: flex; justify-content: space-between; align-items: center; padding: 0 40px; background: var(--panel); border-bottom: 4px solid var(--accent); height: 120px; z-index: 10; }
         .live-time { font-size: 5rem; font-weight: 800; font-variant-numeric: tabular-nums; }
         .seconds { font-size: 2rem; color: var(--accent); margin-left: 5px; opacity: 0.7; }
-        .info-card { background: linear-gradient(135deg, var(--info-color), #7e22ce); padding: 10px 30px; border-radius: 15px; border-left: 8px solid #fff; min-width: 450px; height: 80px; display: flex; align-items: center; justify-content: center; text-align: center; }
-        #msg-ticker { background: var(--accent); color: var(--bg); font-size: 1.8rem; font-weight: 800; text-align: center; height: 80px; display: flex; align-items: center; justify-content: center; text-transform: uppercase; padding: 0 40px; line-height: 1.2; transition: all 0.4s; }
-        .urgent-ticker { background: var(--warning) !important; color: white !important; font-size: 2.2rem !important; animation: blink 1s infinite; }
-        @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.7; } 100% { opacity: 1; } }
+        
+        /* Ticker (Unten) */
+        #msg-ticker { background: var(--accent); color: var(--bg); font-size: 1.8rem; font-weight: 800; text-align: center; height: 80px; display: flex; align-items: center; justify-content: center; text-transform: uppercase; padding: 0 40px; line-height: 1.2; transition: background 0.3s; }
+        .ticker-urgent { background: var(--warning) !important; color: white !important; }
+
+        /* Main Area */
         main { flex: 1; padding: 25px; background: radial-gradient(circle at center, #1e293b 0%, #0f172a 100%); }
         .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; height: 100%; }
-        .big-card { background: var(--panel); border-radius: 25px; padding: 30px; display: flex; flex-direction: column; align-items: center; justify-content: center; border-top: 12px solid var(--accent); text-align: center; height: 100%; position: relative; }
+        
+        /* Impuls Kacheln */
+        .big-card { background: var(--panel); border-radius: 25px; padding: 30px; display: flex; flex-direction: column; align-items: center; justify-content: center; border-top: 12px solid var(--accent); text-align: center; height: 100%; position: relative; transition: border-color 0.4s; }
         .timer-box { background: rgba(0,0,0,0.3); padding: 15px 30px; border-radius: 15px; color: var(--highlight); font-weight: 800; font-size: 1.8rem; margin-top: 20px; border: 2px solid var(--highlight); min-width: 240px; font-variant-numeric: tabular-nums; }
-        .msg-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; width: 100%; overflow-y: auto; }
+        
+        /* Sonderzustand: Impuls startet bald / JETZT */
+        .card-active { border-top-color: var(--highlight) !important; }
+        .timer-active { background: var(--highlight) !important; color: white !important; border: none !important; }
+
+        /* Andere Slides Styles */
+        .msg-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; width: 100%; }
         .msg-box { background: var(--glass); border-left: 10px solid var(--accent); padding: 25px; border-radius: 20px; text-align: left; position: relative; }
         .class-badge { position: absolute; top: 15px; right: 15px; background: var(--accent); color: var(--bg); padding: 4px 12px; border-radius: 8px; font-weight: 900; font-size: 1.2rem; }
-        table { width: 100%; height: 100%; border-collapse: separate; border-spacing: 8px; table-layout: fixed; }
+        table { width: 100%; height: 100%; border-collapse: separate; border-spacing: 8px; }
         th { background: var(--glass); color: var(--accent); font-size: 1.3rem; padding: 10px; border-radius: 10px; }
-        td { background: var(--glass); border-radius: 10px; text-align: center; font-size: 1.4rem; border: 1px solid rgba(255,255,255,0.05); }
-        .active-cell { background: var(--highlight) !important; color: white !important; font-weight: 900; border: 4px solid #fff !important; box-shadow: 0 0 30px rgba(34, 197, 94, 0.4); transform: scale(1.02); }
+        td { background: var(--glass); border-radius: 10px; text-align: center; font-size: 1.4rem; }
+        .active-cell { background: var(--highlight) !important; color: white !important; font-weight: 900; }
         .fade { animation: fadeIn 0.6s ease-out; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        .now-blinking { animation: pulseNow 0.8s infinite; color: white !important; border: none !important; font-size: 2.5rem !important; }
-        @keyframes pulseNow { 0% { background: var(--highlight); } 50% { background: var(--warning); } 100% { background: var(--highlight); } }
     </style>
 </head>
 <body onclick="document.documentElement.requestFullscreen()">
@@ -44,7 +54,7 @@
         <div id="view-label" style="background:var(--accent); color:var(--bg); padding:5px 15px; border-radius:8px; font-weight:900; text-transform: uppercase;">STATUS</div>
         <div id="live-date" style="font-size: 1.8rem; margin-top:8px;">---</div>
     </div>
-    <div class="info-card">
+    <div class="info-card" id="info-panel" style="background: linear-gradient(135deg, var(--info-color), #7e22ce); padding: 10px 30px; border-radius: 15px; border-left: 8px solid #fff; min-width: 450px; display: flex; align-items: center; justify-content: center;">
         <div id="info-content" style="font-size: 1.6rem; font-weight: 700;">Lade Daten...</div>
     </div>
     <div class="live-time"><span id="h-m">00:00</span><span id="sec" class="seconds">00</span></div>
@@ -54,9 +64,9 @@
 <main id="content-area" class="fade"></main>
 
 <script>
-    // --- KONFIGURATION ---
-    const TEST_MODE = false;   
-    const TEST_TIME = "09:10"; 
+    // --- CONFIG ---
+    const TEST_MODE = true;   
+    const TEST_TIME = "08:26"; 
     const TEST_DAY  = 1;      
 
     const SLIDE_INTERVAL = 10000; 
@@ -115,8 +125,7 @@
     if (TEST_MODE) {
         const now = new Date();
         const [tH, tM] = TEST_TIME.split(':').map(Number);
-        const target = new Date();
-        target.setHours(tH, tM, 0);
+        const target = new Date(); target.setHours(tH, tM, 0);
         debugOffset = target.getTime() - now.getTime();
     }
 
@@ -135,7 +144,6 @@
     }
 
     function timeToMin(t) {
-        if(!t) return 0;
         const [h, m] = t.split(':').map(Number);
         return h * 60 + m;
     }
@@ -158,31 +166,26 @@
 
         document.getElementById('h-m').textContent = now.toLocaleTimeString('de-DE', {hour: '2-digit', minute:'2-digit'});
         document.getElementById('sec').textContent = now.getSeconds().toString().padStart(2, '0');
-        
-        const weekdays = ["Sonntag", "Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag"];
-        document.getElementById('live-date').textContent = TEST_MODE ? "TEST: " + weekdays[TEST_DAY] : now.toLocaleDateString('de-DE', {weekday:'long', day:'2-digit', month:'long'});
+        document.getElementById('live-date').textContent = TEST_MODE ? "Mo, 23. März (TEST)" : now.toLocaleDateString('de-DE', {weekday:'long', day:'2-digit', month:'long'});
         document.getElementById('info-content').textContent = SCHOOL_DATA.uliMessage || "";
 
-        // TICKER LOGIK (Zitate vs. Eilmeldung)
+        // TICKER LOGIK
         const ticker = document.getElementById('msg-ticker');
-        ticker.classList.remove('urgent-ticker');
-        
-        let urgentImpulses = [];
-        ["10","11","12"].forEach(cid => {
-            const next = getNextImpulse(cid, day, curMin, curSecTotal);
-            if(next && next.dayOffset === 0 && next.secondsDiff > 0 && next.secondsDiff <= 300) {
-                urgentImpulses.push(`KL. ${cid}: ${next.fach} (${Math.ceil(next.secondsDiff/60)} Min)`);
+        let urgentList = [];
+        ["10","11","12"].forEach(c => {
+            const n = getNextImpulse(c, day, curMin, curSecTotal);
+            if(n && n.dayOffset === 0 && n.secondsDiff > 0 && n.secondsDiff <= 300) {
+                urgentList.push(`KL. ${c}: ${n.fach}`);
             }
         });
 
-        if (urgentImpulses.length > 0) {
-            ticker.textContent = "⚠️ IMPULS STARTET: " + urgentImpulses.join(" | ");
-            ticker.classList.add('urgent-ticker');
+        if (urgentList.length > 0) {
+            ticker.textContent = "🚨 START IN KÜRZE: " + urgentList.join(" | ");
+            ticker.classList.add('ticker-urgent');
         } else {
+            ticker.classList.remove('ticker-urgent');
             let activeIdx = slots.findIndex(s => curMin >= timeToMin(s.s) && curMin < timeToMin(s.e));
-            if (curMin >= 960 || curMin < 450) ticker.textContent = "Standby";
-            else if (activeIdx !== -1 && slots[activeIdx].label) ticker.textContent = slots[activeIdx].label;
-            else ticker.textContent = currentQuote;
+            ticker.textContent = (activeIdx !== -1 && slots[activeIdx].label) ? slots[activeIdx].label : currentQuote;
         }
 
         render(day, curMin, curSecTotal);
@@ -191,7 +194,6 @@
     function render(today, curMin, curSecTotal) {
         const area = document.getElementById('content-area');
         const v = views[step];
-        const todayStr = new Date(Date.now() + debugOffset).toISOString().split('T')[0];
         document.getElementById('view-label').textContent = isNaN(v) ? v.toUpperCase() : "PLAN KLASSE " + v;
 
         if (step === 0) { // LIVE STATUS
@@ -200,35 +202,33 @@
                 const next = getNextImpulse(c, today, curMin, curSecTotal);
                 if (next) {
                     const timeStr = getCountdownString(next.secondsDiff);
-                    const dayLabel = next.dayOffset === 0 ? "Heute" : (next.dayOffset === 1 ? "Morgen" : next.weekdayName);
+                    const isUrgent = next.secondsDiff <= 300; // Unter 5 Min = Grün
                     html += `
-                        <div class="big-card">
+                        <div class="big-card ${isUrgent ? 'card-active' : ''}">
                             <div style="position:absolute; top:20px; left:25px; font-size:1.8rem; font-weight:900; opacity:0.2">KLASSE ${c}</div>
-                            <div style="opacity:0.6; font-size:1.4rem;">${dayLabel} ${next.time}</div>
+                            <div style="opacity:0.6; font-size:1.4rem;">${next.dayOffset === 0 ? 'Heute' : next.weekdayName} ${next.time}</div>
                             <div style="font-size:3.5rem; color:var(--accent); font-weight:900; margin:20px 0;">${next.fach}</div>
-                            <div class="timer-box ${timeStr === 'JETZT' ? 'now-blinking' : ''}">${timeStr}</div>
+                            <div class="timer-box ${isUrgent ? 'timer-active' : ''}">${timeStr}</div>
                         </div>`;
-                } else { html += `<div class="big-card"><div style="opacity:0.3; font-size:1.5rem;">Keine Impulse</div></div>`; }
+                } else { html += `<div class="big-card">Keine Impulse</div>`; }
             });
             area.innerHTML = html + `</div>`;
         } 
         else if (v === "Lehrer") {
-            let html = `<div class="big-card" style="justify-content:flex-start; align-items:stretch; padding:45px;"><h2 style="font-size: 2.5rem; margin-bottom:30px; color: var(--info-color)">Lehrer Präsenz (Live)</h2><div class="msg-grid">`;
+            let html = `<div class="big-card" style="justify-content:flex-start; align-items:stretch; padding:45px;"><h2 style="font-size: 2.5rem; color: var(--info-color)">Lehrer Präsenz (Live)</h2><div class="msg-grid">`;
             let count = 0;
             if (SCHOOL_DATA.lehrerPlan) {
                 SCHOOL_DATA.lehrerPlan.forEach(l => {
-                    const zeiten = l.zeiten[today.toString()] || [];
-                    zeiten.forEach(z => {
+                    (l.zeiten[today.toString()] || []).forEach(z => {
                         const start = timeToMin(z[0]), end = timeToMin(z[1]);
                         const isNow = curMin >= start && curMin < end;
                         const isSoon = start > curMin && start - curMin <= 60;
                         if (isNow || isSoon) {
                             count++;
-                            const statusColor = isNow ? 'var(--highlight)' : 'var(--pause)';
-                            const statusText = isNow ? `ANWESEND BIS ${z[1]}` : `DEMNÄCHST (AB ${z[0]})`;
-                            html += `<div class="msg-box" style="border-left-color: ${statusColor}; background: rgba(255,255,255,0.03)">
-                                ${z[2] ? '<div class="class-badge" style="background:'+statusColor+'">KLASSE '+z[2]+'</div>' : ''}
-                                <b style="color:${statusColor}; text-transform:uppercase; font-size:0.9rem;">${statusText}</b>
+                            const col = isNow ? 'var(--highlight)' : 'var(--pause)';
+                            html += `<div class="msg-box" style="border-left-color: ${col};">
+                                ${z[2] ? '<div class="class-badge" style="background:'+col+'">KLASSE '+z[2]+'</div>' : ''}
+                                <b style="color:${col}; text-transform:uppercase;">${isNow ? 'ANWESEND BIS '+z[1] : 'AB '+z[0]}</b>
                                 <div style="font-size:1.8rem; font-weight:800; margin: 8px 0;">${l.name}</div>
                                 <div style="font-size:1.2rem; opacity:0.7;">Fach: ${l.fach}</div>
                             </div>`;
@@ -236,13 +236,12 @@
                     });
                 });
             }
-            area.innerHTML = html + (count === 0 ? '<div style="opacity:0.2; font-size:2rem; margin-top:50px;">Keine Lehrer im Haus</div>' : '') + `</div></div>`;
+            area.innerHTML = html + (count === 0 ? 'Keine Lehrer anwesend' : '') + `</div></div>`;
         }
         else if (v === "Informationen") {
-            let html = `<div class="big-card" style="justify-content:flex-start; align-items:stretch; padding:45px;"><h2 style="font-size: 2.5rem; margin-bottom:30px; color: var(--accent)">Aktuelle Informationen</h2><div class="msg-grid">`;
-            const activeMsgs = (SCHOOL_DATA.shortMessages || []).filter(m => !m.gueltig_bis || m.gueltig_bis >= todayStr);
-            activeMsgs.forEach(m => {
-                html += `<div class="msg-box"><b style="color:var(--accent); text-transform:uppercase; font-size:1.1rem;">${m.von || "Info"} ${m.klasse ? '('+m.klasse+')' : ''}</b><div style="font-size:1.6rem; font-weight:700; margin-top:10px;">${m.nachricht}</div></div>`;
+            let html = `<div class="big-card" style="justify-content:flex-start; align-items:stretch; padding:45px;"><h2 style="font-size: 2.5rem; color: var(--accent)">Infos</h2><div class="msg-grid">`;
+            (SCHOOL_DATA.shortMessages || []).forEach(m => {
+                html += `<div class="msg-box"><b>${m.von || "Info"}</b><div style="font-size:1.6rem; font-weight:700; margin-top:10px;">${m.nachricht}</div></div>`;
             });
             area.innerHTML = html + `</div></div>`;
         }
@@ -251,8 +250,8 @@
             let table = `<table><thead><tr><th style="width:160px">Zeit</th><th>Mo</th><th>Di</th><th>Mi</th><th>Do</th><th>Fr</th></tr></thead><tbody>`;
             slots.forEach(slot => {
                 const isTimeActive = (curMin >= timeToMin(slot.s) && curMin < timeToMin(slot.e));
-                table += `<tr><td style="background:rgba(0,0,0,0.3); font-weight:bold; color:var(--accent)">${slot.s}</td>`;
-                if(slot.label) table += `<td colspan="5" class="${isTimeActive && today>=1 && today<=5 ? 'active-cell' : ''}" style="color:var(--pause)">${slot.label}</td>`;
+                table += `<tr><td style="color:var(--accent)">${slot.s}</td>`;
+                if(slot.label) table += `<td colspan="5" class="${isTimeActive ? 'active-cell' : ''}">${slot.label}</td>`;
                 else for(let d=1; d<=5; d++) table += `<td class="${isTimeActive && d===today ? 'active-cell' : ''}">${SCHOOL_DATA.fullSchedules?.[cid]?.[d]?.[slot.s] || ""}</td>`;
                 table += `</tr>`;
             });
@@ -272,8 +271,7 @@
                     if (offset === 0 && currentMin > startMin + 3) continue;
                     const fach = dayPlan[slot.s];
                     if (fach && fach.trim() !== "") {
-                        const targetSecTotal = (offset * 86400) + (startMin * 60);
-                        return { fach, time: slot.s, secondsDiff: targetSecTotal - curSecTotal, dayOffset: offset, weekdayName: ["So", "Mo", "Di", "Mi", "Do", "Fr", "Sa"][checkDay] };
+                        return { fach, time: slot.s, secondsDiff: (offset * 86400) + (startMin * 60) - curSecTotal, dayOffset: offset, weekdayName: ["So", "Mo", "Di", "Mi", "Do", "Fr", "Sa"][checkDay] };
                     }
                 }
             }
