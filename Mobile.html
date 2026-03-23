@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Campus Pro</title>
     <style>
-        :root { --bg: #000; --panel: #111; --accent: #007bff; --text: #fff; --grey: #666; --k11: #a855f7; }
+        :root { --bg: #000; --panel: #111; --accent: #007bff; --text: #fff; --grey: #666; --k11: #a855f7; --green: #28a745; }
         * { box-sizing: border-box; font-family: -apple-system, sans-serif; }
         body { background: var(--bg); color: var(--text); margin: 0; padding-bottom: 70px; }
 
@@ -17,88 +17,73 @@
         .page { display: none; padding: 15px; }
         .page.active { display: block; }
 
-        /* Impuls Fenster (3 Klassen) */
-        .impuls-grid { display: grid; gap: 10px; margin-top: 10px; }
-        .impuls-card { background: var(--panel); padding: 15px; border-radius: 12px; border-left: 4px solid var(--accent); }
-        .impuls-card h3 { margin: 0; font-size: 0.8rem; color: var(--grey); }
-        .timer { font-size: 1.8rem; font-weight: bold; margin: 5px 0; }
+        /* Impuls Live-Ticker */
+        .impuls-card { background: var(--panel); padding: 15px; border-radius: 12px; margin-bottom: 10px; border-left: 4px solid var(--accent); position: relative; }
+        .class-badge { position: absolute; top: 10px; right: 15px; font-size: 0.6rem; color: var(--grey); border: 1px solid #333; padding: 2px 6px; border-radius: 4px; }
+        .countdown { font-size: 2rem; font-weight: 900; color: var(--green); margin: 5px 0; }
+        .next-info { font-size: 0.9rem; font-weight: bold; }
 
-        /* Tabellen Styling */
-        .scroll-x { width: 100%; overflow-x: auto; border-radius: 8px; border: 1px solid #222; }
-        table { width: 100%; border-collapse: collapse; background: var(--panel); font-size: 0.75rem; min-width: 500px; }
-        th, td { padding: 8px; border: 1px solid #222; text-align: left; }
-        th { background: #1a1a1a; color: var(--accent); position: sticky; left: 0; z-index: 5; }
-        td:first-child { font-weight: bold; background: #1a1a1a; position: sticky; left: 0; }
+        /* Scroll-Tabellen */
+        .scroll-wrapper { width: 100%; overflow-x: auto; border-radius: 8px; border: 1px solid #222; margin-top: 10px; }
+        table { width: 100%; border-collapse: collapse; background: var(--panel); font-size: 0.7rem; min-width: 600px; }
+        th, td { padding: 10px; border: 1px solid #222; text-align: left; vertical-align: top; }
+        th { background: #1a1a1a; color: var(--accent); position: sticky; top: 0; }
+        td:first-child { font-weight: bold; background: #1a1a1a; position: sticky; left: 0; z-index: 2; width: 80px; }
 
-        .btn-group { display: flex; gap: 5px; margin-bottom: 10px; overflow-x: auto; padding-bottom: 5px; }
-        .btn-s { background: #222; color: #fff; border: none; padding: 6px 12px; border-radius: 4px; font-size: 0.7rem; }
+        .btn-group { display: flex; gap: 5px; margin-bottom: 10px; overflow-x: auto; }
+        .btn-s { background: #222; color: #fff; border: none; padding: 8px 15px; border-radius: 5px; font-size: 0.75rem; }
         .btn-s.active { background: var(--accent); }
-
         .highlight-11 { color: var(--k11); font-weight: bold; }
     </style>
 </head>
 <body>
 
 <section id="p-impuls" class="page active">
-    <h2 style="font-size: 1.2rem;">Live Impuls</h2>
-    <div class="impuls-grid" id="impuls-container">
-        </div>
+    <h2 style="font-size: 1.2rem;">Nächster Impuls</h2>
+    <div id="impuls-list"></div>
 </section>
 
 <section id="p-plan" class="page">
-    <div class="btn-group" id="plan-class-btns">
-        <button class="btn-s active" onclick="switchClass('10')">KL 10</button>
-        <button class="btn-s" onclick="switchClass('11')">KL 11</button>
-        <button class="btn-s" onclick="switchClass('12')">KL 12</button>
-    </div>
     <div class="btn-group">
-        <button class="btn-s active day-btn" onclick="switchDay(1)">MO</button>
-        <button class="btn-s day-btn" onclick="switchDay(2)">DI</button>
-        <button class="btn-s day-btn" onclick="switchDay(3)">MI</button>
-        <button class="btn-s day-btn" onclick="switchDay(4)">DO</button>
-        <button class="btn-s day-btn" onclick="switchDay(5)">FR</button>
+        <button class="btn-s active" onclick="switchClassPlan('10', this)">KL 10</button>
+        <button class="btn-s" onclick="switchClassPlan('11', this)">KL 11</button>
+        <button class="btn-s" onclick="switchClassPlan('12', this)">KL 12</button>
     </div>
-    <div id="plan-display"></div>
+    <div class="scroll-wrapper">
+        <table id="plan-table">
+            <thead><tr><th>Zeit</th><th>Mo</th><th>Di</th><th>Mi</th><th>Do</th><th>Fr</th></tr></thead>
+            <tbody id="plan-body"></tbody>
+        </table>
+    </div>
 </section>
 
 <section id="p-lehrer" class="page">
-    <h2>Lehrer Wochenplan</h2>
-    <div class="scroll-x">
+    <h2 style="font-size: 1.2rem;">Lehrer Wochenplan</h2>
+    <div class="scroll-wrapper">
         <table id="lehrer-table">
-            <thead>
-                <tr>
-                    <th>Lehrer</th>
-                    <th>Mo</th>
-                    <th>Di</th>
-                    <th>Mi</th>
-                    <th>Do</th>
-                    <th>Fr</th>
-                </tr>
-            </thead>
+            <thead><tr><th>Lehrer</th><th>Mo</th><th>Di</th><th>Mi</th><th>Do</th><th>Fr</th></tr></thead>
             <tbody id="lehrer-body"></tbody>
         </table>
     </div>
 </section>
 
 <nav>
-    <button class="nav-btn active" onclick="nav('impuls', this)">⏱️ IMPULS</button>
+    <button class="nav-btn active" onclick="nav('impuls', this)">⏱️ TICKER</button>
     <button class="nav-btn" onclick="nav('plan', this)">📅 PLÄNE</button>
     <button class="nav-btn" onclick="nav('lehrer', this)">👨‍🏫 LEHRER</button>
 </nav>
 
 <script>
     let DATA = {};
-    let selClass = "10";
-    let selDay = new Date().getDay() || 1;
-    if(selDay > 5) selDay = 1;
+    const toMin = t => { if(!t) return 0; const [h,m] = t.split(':').map(Number); return h*60+m; };
 
     async function init() {
         const r = await fetch('data.json?t=' + Date.now());
         DATA = await r.json();
         renderLehrerTable();
-        renderPlan();
-        updateImpuls();
-        setInterval(updateImpuls, 30000);
+        switchClassPlan('10', document.querySelector('.btn-s'));
+        updateTicker();
+        setInterval(updateTicker, 60000);
     }
 
     function nav(p, btn) {
@@ -108,28 +93,21 @@
         btn.classList.add('active');
     }
 
-    function switchClass(c) {
-        selClass = c;
-        document.querySelectorAll('#plan-class-btns .btn-s').forEach(b => b.classList.toggle('active', b.innerText.includes(c)));
-        renderPlan();
-    }
+    function switchClassPlan(c, btn) {
+        document.querySelectorAll('#p-plan .btn-s').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        
+        const scheds = DATA.fullSchedules[c];
+        let times = new Set();
+        [1,2,3,4,5].forEach(d => Object.keys(scheds[d] || {}).forEach(t => times.add(t)));
+        const sorted = Array.from(times).sort();
 
-    function switchDay(d) {
-        selDay = d;
-        document.querySelectorAll('.day-btn').forEach((b, i) => b.classList.toggle('active', i+1 === d));
-        renderPlan();
-    }
-
-    function renderPlan() {
-        const p = DATA.fullSchedules[selClass][selDay] || {};
-        let html = '<div style="background:#111; border-radius:8px;">';
-        Object.keys(p).sort().forEach(t => {
-            html += `<div style="padding:12px; border-bottom:1px solid #222; display:flex; justify-content:space-between;">
-                        <span style="color:var(--accent); font-weight:bold;">${t}</span>
-                        <span>${p[t]}</span>
-                     </div>`;
-        });
-        document.getElementById('plan-display').innerHTML = html + '</div>';
+        document.getElementById('plan-body').innerHTML = sorted.map(t => `
+            <tr>
+                <td>${t}</td>
+                ${[1,2,3,4,5].map(d => `<td>${scheds[d][t] || '-'}</td>`).join('')}
+            </tr>
+        `).join('');
     }
 
     function renderLehrerTable() {
@@ -146,7 +124,7 @@
         `).join('');
     }
 
-    function updateImpuls() {
+    function updateTicker() {
         const now = new Date();
         const curMin = now.getHours() * 60 + now.getMinutes();
         const classes = ["10", "11", "12"];
@@ -154,33 +132,33 @@
 
         classes.forEach(c => {
             let found = false;
-            // Suche heute & Folgetage
             for(let offset = 0; offset < 7; offset++) {
                 let d = (now.getDay() + offset) % 7;
-                if(d === 0 || d === 6) continue; // WE überspringen
+                if(d === 0 || d === 6) continue;
 
                 const dayPlan = DATA.fullSchedules[c][d] || {};
                 const times = Object.keys(dayPlan).sort();
 
                 for(let t of times) {
-                    if(offset === 0 && toMin(t) <= curMin) continue;
+                    const tMin = toMin(t);
+                    if(offset === 0 && tMin <= curMin) continue;
                     
-                    const dayName = offset === 0 ? "Heute" : (offset === 1 ? "Morgen" : ["So","Mo","Di","Mi","Do","Fr","Sa"][d]);
+                    const totalDiff = (offset * 1440) + (tMin - curMin);
+                    const dayLabel = offset === 0 ? "" : (offset === 1 ? "Morgen " : ["So","Mo","Di","Mi","Do","Fr","Sa"][d] + " ");
+                    
                     html += `<div class="impuls-card">
-                                <h3>KLASSE ${c} - ${dayName}</h3>
-                                <div class="timer">${t} Uhr</div>
-                                <div style="color:var(--accent)">${dayPlan[t]}</div>
+                                <span class="class-badge">KLASSE ${c}</span>
+                                <div class="countdown">in ${totalDiff} Min</div>
+                                <div class="next-info">${dayLabel}${t} Uhr: ${dayPlan[t]}</div>
                              </div>`;
-                    found = true;
-                    break;
+                    found = true; break;
                 }
                 if(found) break;
             }
         });
-        document.getElementById('impuls-container').innerHTML = html;
+        document.getElementById('impuls-list').innerHTML = html;
     }
 
-    const toMin = t => { if(!t) return 0; const [h,m] = t.split(':').map(Number); return h*60+m; };
     init();
 </script>
 </body>
