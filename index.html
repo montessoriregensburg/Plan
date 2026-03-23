@@ -13,8 +13,6 @@
         }
         * { box-sizing: border-box; cursor: none; font-family: 'Inter', sans-serif; }
         body { background: var(--bg); color: var(--text); margin: 0; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
-        
-        /* Header Bereich */
         header { display: flex; justify-content: space-between; align-items: center; padding: 0 40px; background: var(--panel); border-bottom: 4px solid var(--accent); height: 120px; z-index: 10; }
         .live-time { font-size: 5rem; font-weight: 800; font-variant-numeric: tabular-nums; }
         .seconds { font-size: 2rem; color: var(--accent); margin-left: 5px; opacity: 0.7; }
@@ -23,19 +21,15 @@
         #msg-ticker { background: var(--accent); color: var(--bg); font-size: 1.8rem; font-weight: 800; text-align: center; height: 80px; display: flex; align-items: center; justify-content: center; text-transform: uppercase; padding: 0 40px; line-height: 1.2; transition: background 0.3s; }
         .ticker-urgent { background: var(--warning) !important; color: white !important; }
 
-        /* Main Area */
         main { flex: 1; padding: 25px; background: radial-gradient(circle at center, #1e293b 0%, #0f172a 100%); }
         .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; height: 100%; }
         
-        /* Impuls Kacheln */
-        .big-card { background: var(--panel); border-radius: 25px; padding: 30px; display: flex; flex-direction: column; align-items: center; justify-content: center; border-top: 12px solid var(--accent); text-align: center; height: 100%; position: relative; transition: border-color 0.4s; }
+        .big-card { background: var(--panel); border-radius: 25px; padding: 30px; display: flex; flex-direction: column; align-items: center; justify-content: center; border-top: 12px solid var(--accent); text-align: center; height: 100%; position: relative; }
         .timer-box { background: rgba(0,0,0,0.3); padding: 15px 30px; border-radius: 15px; color: var(--highlight); font-weight: 800; font-size: 1.8rem; margin-top: 20px; border: 2px solid var(--highlight); min-width: 240px; font-variant-numeric: tabular-nums; }
         
-        /* Sonderzustand: Impuls startet bald / JETZT */
         .card-active { border-top-color: var(--highlight) !important; }
         .timer-active { background: var(--highlight) !important; color: white !important; border: none !important; }
 
-        /* Andere Slides Styles */
         .msg-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; width: 100%; }
         .msg-box { background: var(--glass); border-left: 10px solid var(--accent); padding: 25px; border-radius: 20px; text-align: left; position: relative; }
         .class-badge { position: absolute; top: 15px; right: 15px; background: var(--accent); color: var(--bg); padding: 4px 12px; border-radius: 8px; font-weight: 900; font-size: 1.2rem; }
@@ -54,8 +48,8 @@
         <div id="view-label" style="background:var(--accent); color:var(--bg); padding:5px 15px; border-radius:8px; font-weight:900; text-transform: uppercase;">STATUS</div>
         <div id="live-date" style="font-size: 1.8rem; margin-top:8px;">---</div>
     </div>
-    <div class="info-card" id="info-panel" style="background: linear-gradient(135deg, var(--info-color), #7e22ce); padding: 10px 30px; border-radius: 15px; border-left: 8px solid #fff; min-width: 450px; display: flex; align-items: center; justify-content: center;">
-        <div id="info-content" style="font-size: 1.6rem; font-weight: 700;">Lade Daten...</div>
+    <div class="info-card">
+        <div id="info-content" style="font-size: 1.6rem; font-weight: 700; color:white;">Lade Daten...</div>
     </div>
     <div class="live-time"><span id="h-m">00:00</span><span id="sec" class="seconds">00</span></div>
 </header>
@@ -64,7 +58,6 @@
 <main id="content-area" class="fade"></main>
 
 <script>
-    // --- CONFIG ---
     const TEST_MODE = true;   
     const TEST_TIME = "08:26"; 
     const TEST_DAY  = 1;      
@@ -148,16 +141,6 @@
         return h * 60 + m;
     }
 
-    function getCountdownString(totalSeconds) {
-        if (totalSeconds <= 180) return "JETZT";
-        const totalMinutes = Math.floor(totalSeconds / 60);
-        const remSeconds = totalSeconds % 60;
-        if (totalMinutes < 60) return `${totalMinutes} Min. ${remSeconds.toString().padStart(2, '0')} Sek.`;
-        const hours = Math.floor(totalMinutes / 60);
-        const mins = totalMinutes % 60;
-        return `${hours} Std. ${mins.toString().padStart(2, '0')} Min.`;
-    }
-
     function update() {
         const now = new Date(Date.now() + debugOffset);
         const curMin = now.getHours() * 60 + now.getMinutes();
@@ -169,18 +152,18 @@
         document.getElementById('live-date').textContent = TEST_MODE ? "Mo, 23. März (TEST)" : now.toLocaleDateString('de-DE', {weekday:'long', day:'2-digit', month:'long'});
         document.getElementById('info-content').textContent = SCHOOL_DATA.uliMessage || "";
 
-        // TICKER LOGIK
         const ticker = document.getElementById('msg-ticker');
         let urgentList = [];
         ["10","11","12"].forEach(c => {
             const n = getNextImpulse(c, day, curMin, curSecTotal);
             if(n && n.dayOffset === 0 && n.secondsDiff > 0 && n.secondsDiff <= 300) {
-                urgentList.push(`KL. ${c}: ${n.fach}`);
+                const minLeft = Math.ceil(n.secondsDiff / 60);
+                urgentList.push(`KL. ${c}: ${n.fach} IN ${minLeft} MIN.`);
             }
         });
 
         if (urgentList.length > 0) {
-            ticker.textContent = "🚨 START IN KÜRZE: " + urgentList.join(" | ");
+            ticker.textContent = "IMPULS STARTET: " + urgentList.join(" | ");
             ticker.classList.add('ticker-urgent');
         } else {
             ticker.classList.remove('ticker-urgent');
@@ -196,13 +179,19 @@
         const v = views[step];
         document.getElementById('view-label').textContent = isNaN(v) ? v.toUpperCase() : "PLAN KLASSE " + v;
 
-        if (step === 0) { // LIVE STATUS
+        if (step === 0) { 
             let html = `<div class="grid-3">`;
             ["10","11","12"].forEach(c => {
                 const next = getNextImpulse(c, today, curMin, curSecTotal);
                 if (next) {
-                    const timeStr = getCountdownString(next.secondsDiff);
-                    const isUrgent = next.secondsDiff <= 300; // Unter 5 Min = Grün
+                    const isUrgent = next.secondsDiff <= 300;
+                    let timeStr;
+                    if (next.secondsDiff <= 180) timeStr = "JETZT";
+                    else {
+                        const m = Math.floor(next.secondsDiff / 60);
+                        const s = next.secondsDiff % 60;
+                        timeStr = `${m}:${s.toString().padStart(2, '0')} MIN.`;
+                    }
                     html += `
                         <div class="big-card ${isUrgent ? 'card-active' : ''}">
                             <div style="position:absolute; top:20px; left:25px; font-size:1.8rem; font-weight:900; opacity:0.2">KLASSE ${c}</div>
