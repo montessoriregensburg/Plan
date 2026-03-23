@@ -3,165 +3,181 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Schul-Plan</title>
+    <title>Campus Pro</title>
     <style>
-        :root { --bg: #000; --card: #1a1a1a; --accent: #007bff; --text: #fff; --grey: #888; }
-        * { box-sizing: border-box; font-family: sans-serif; }
-        body { background: var(--bg); color: var(--text); margin: 0; padding: 10px; }
+        :root { --bg: #000; --panel: #111; --accent: #007bff; --text: #fff; --grey: #666; --k11: #a855f7; }
+        * { box-sizing: border-box; font-family: -apple-system, sans-serif; }
+        body { background: var(--bg); color: var(--text); margin: 0; padding-bottom: 70px; }
 
-        /* News Box statt Ticker */
-        .news-box { background: #222; border: 1px solid var(--accent); padding: 10px; border-radius: 8px; margin-bottom: 15px; font-size: 0.9rem; }
-        .news-title { color: var(--accent); font-weight: bold; font-size: 0.7rem; text-transform: uppercase; }
+        /* Navigation */
+        nav { position: fixed; bottom: 0; width: 100%; background: #111; display: flex; border-top: 1px solid #333; z-index: 100; }
+        .nav-btn { flex: 1; padding: 15px; border: none; background: none; color: var(--grey); font-weight: bold; font-size: 0.7rem; }
+        .nav-btn.active { color: var(--accent); border-top: 2px solid var(--accent); }
 
-        /* Impuls Timer */
-        .impuls-area { text-align: center; margin-bottom: 20px; padding: 15px; background: var(--card); border-radius: 12px; }
-        .timer { font-size: 3rem; font-weight: bold; color: var(--accent); }
-
-        /* Navigation Tabs */
-        .tabs { display: flex; background: #111; padding: 5px; border-radius: 10px; margin-bottom: 20px; }
-        .tab-btn { flex: 1; border: none; background: none; color: var(--grey); padding: 10px; font-weight: bold; font-size: 0.8rem; }
-        .tab-btn.active { background: var(--card); color: #fff; border-radius: 8px; }
-
-        .page { display: none; }
+        .page { display: none; padding: 15px; }
         .page.active { display: block; }
 
-        /* Lehrer Liste - Extrem Kompakt */
-        .l-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        .l-table th { text-align: left; color: var(--grey); font-size: 0.7rem; padding: 5px; border-bottom: 1px solid #333; }
-        .l-table td { padding: 10px 5px; border-bottom: 1px solid #222; font-size: 0.85rem; }
-        .now-badge { background: #28a745; color: #000; padding: 2px 5px; border-radius: 4px; font-size: 0.7rem; font-weight: bold; }
-        .k11-tag { color: #a855f7; font-weight: bold; }
+        /* Impuls Fenster (3 Klassen) */
+        .impuls-grid { display: grid; gap: 10px; margin-top: 10px; }
+        .impuls-card { background: var(--panel); padding: 15px; border-radius: 12px; border-left: 4px solid var(--accent); }
+        .impuls-card h3 { margin: 0; font-size: 0.8rem; color: var(--grey); }
+        .timer { font-size: 1.8rem; font-weight: bold; margin: 5px 0; }
 
-        /* Plan Liste */
-        .plan-item { display: flex; justify-content: space-between; padding: 12px; background: var(--card); margin-bottom: 5px; border-radius: 8px; }
-        .day-nav { display: flex; gap: 5px; margin-bottom: 10px; overflow-x: auto; }
-        .day-btn { background: #222; color: #fff; border: none; padding: 8px 15px; border-radius: 5px; font-size: 0.7rem; }
-        .day-btn.active { background: var(--accent); }
+        /* Tabellen Styling */
+        .scroll-x { width: 100%; overflow-x: auto; border-radius: 8px; border: 1px solid #222; }
+        table { width: 100%; border-collapse: collapse; background: var(--panel); font-size: 0.75rem; min-width: 500px; }
+        th, td { padding: 8px; border: 1px solid #222; text-align: left; }
+        th { background: #1a1a1a; color: var(--accent); position: sticky; left: 0; z-index: 5; }
+        td:first-child { font-weight: bold; background: #1a1a1a; position: sticky; left: 0; }
+
+        .btn-group { display: flex; gap: 5px; margin-bottom: 10px; overflow-x: auto; padding-bottom: 5px; }
+        .btn-s { background: #222; color: #fff; border: none; padding: 6px 12px; border-radius: 4px; font-size: 0.7rem; }
+        .btn-s.active { background: var(--accent); }
+
+        .highlight-11 { color: var(--k11); font-weight: bold; }
     </style>
 </head>
 <body>
 
-<div class="news-box">
-    <div class="news-title">Short Messages</div>
-    <div id="msg-list">Keine Nachrichten</div>
-</div>
+<section id="p-impuls" class="page active">
+    <h2 style="font-size: 1.2rem;">Live Impuls</h2>
+    <div class="impuls-grid" id="impuls-container">
+        </div>
+</section>
 
-<div class="impuls-area">
-    <div style="font-size: 0.7rem; color: var(--grey);">NÄCHSTER IMPULS IN</div>
-    <div class="timer" id="timer">--:--</div>
-    <div id="next-info" style="font-size: 0.9rem;">Lade...</div>
-</div>
-
-<div class="tabs">
-    <button class="tab-btn active" onclick="showPage('plan', this)">STUNDENPLAN</button>
-    <button class="tab-btn" onclick="showPage('lehrer', this)">LEHRER-STATUS</button>
-</div>
-
-<div id="page-plan" class="page active">
-    <div class="day-nav">
-        <button class="day-btn active" onclick="setPlanDay(1, this)">MO</button>
-        <button class="day-btn" onclick="setPlanDay(2, this)">DI</button>
-        <button class="day-btn" onclick="setPlanDay(3, this)">MI</button>
-        <button class="day-btn" onclick="setPlanDay(4, this)">DO</button>
-        <button class="day-btn" onclick="setPlanDay(5, this)">FR</button>
+<section id="p-plan" class="page">
+    <div class="btn-group" id="plan-class-btns">
+        <button class="btn-s active" onclick="switchClass('10')">KL 10</button>
+        <button class="btn-s" onclick="switchClass('11')">KL 11</button>
+        <button class="btn-s" onclick="switchClass('12')">KL 12</button>
     </div>
-    <div id="plan-content"></div>
-</div>
+    <div class="btn-group">
+        <button class="btn-s active day-btn" onclick="switchDay(1)">MO</button>
+        <button class="btn-s day-btn" onclick="switchDay(2)">DI</button>
+        <button class="btn-s day-btn" onclick="switchDay(3)">MI</button>
+        <button class="btn-s day-btn" onclick="switchDay(4)">DO</button>
+        <button class="btn-s day-btn" onclick="switchDay(5)">FR</button>
+    </div>
+    <div id="plan-display"></div>
+</section>
 
-<div id="page-lehrer" class="page">
-    <table class="l-table">
-        <thead>
-            <tr>
-                <th>LEHRER</th>
-                <th>HEUTE ANWESEND</th>
-            </tr>
-        </thead>
-        <tbody id="lehrer-tbody"></tbody>
-    </table>
-</div>
+<section id="p-lehrer" class="page">
+    <h2>Lehrer Wochenplan</h2>
+    <div class="scroll-x">
+        <table id="lehrer-table">
+            <thead>
+                <tr>
+                    <th>Lehrer</th>
+                    <th>Mo</th>
+                    <th>Di</th>
+                    <th>Mi</th>
+                    <th>Do</th>
+                    <th>Fr</th>
+                </tr>
+            </thead>
+            <tbody id="lehrer-body"></tbody>
+        </table>
+    </div>
+</section>
+
+<nav>
+    <button class="nav-btn active" onclick="nav('impuls', this)">⏱️ IMPULS</button>
+    <button class="nav-btn" onclick="nav('plan', this)">📅 PLÄNE</button>
+    <button class="nav-btn" onclick="nav('lehrer', this)">👨‍🏫 LEHRER</button>
+</nav>
 
 <script>
     let DATA = {};
-    let currentDay = new Date().getDay() || 1;
-    if(currentDay > 5) currentDay = 1;
+    let selClass = "10";
+    let selDay = new Date().getDay() || 1;
+    if(selDay > 5) selDay = 1;
 
     async function init() {
         const r = await fetch('data.json?t=' + Date.now());
         DATA = await r.json();
-        
-        document.getElementById('msg-list').innerText = DATA.shortMessages.join(" | ") || "Alles normal.";
-        renderLehrer();
-        renderPlan(currentDay);
-        tick();
+        renderLehrerTable();
+        renderPlan();
+        updateImpuls();
+        setInterval(updateImpuls, 30000);
     }
 
-    function showPage(p, btn) {
+    function nav(p, btn) {
         document.querySelectorAll('.page').forEach(pg => pg.classList.remove('active'));
-        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-        document.getElementById('page-' + p).classList.add('active');
+        document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById('p-' + p).classList.add('active');
         btn.classList.add('active');
     }
 
-    function setPlanDay(d, btn) {
-        document.querySelectorAll('.day-btn').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        renderPlan(d);
+    function switchClass(c) {
+        selClass = c;
+        document.querySelectorAll('#plan-class-btns .btn-s').forEach(b => b.classList.toggle('active', b.innerText.includes(c)));
+        renderPlan();
     }
 
-    function renderPlan(d) {
-        const p = DATA.fullSchedules["11"][d] || {};
-        document.getElementById('plan-content').innerHTML = Object.keys(p).sort().map(t => `
-            <div class="plan-item">
-                <span style="color:var(--accent); font-weight:bold;">${t}</span>
-                <span>${p[t]}</span>
-            </div>
+    function switchDay(d) {
+        selDay = d;
+        document.querySelectorAll('.day-btn').forEach((b, i) => b.classList.toggle('active', i+1 === d));
+        renderPlan();
+    }
+
+    function renderPlan() {
+        const p = DATA.fullSchedules[selClass][selDay] || {};
+        let html = '<div style="background:#111; border-radius:8px;">';
+        Object.keys(p).sort().forEach(t => {
+            html += `<div style="padding:12px; border-bottom:1px solid #222; display:flex; justify-content:space-between;">
+                        <span style="color:var(--accent); font-weight:bold;">${t}</span>
+                        <span>${p[t]}</span>
+                     </div>`;
+        });
+        document.getElementById('plan-display').innerHTML = html + '</div>';
+    }
+
+    function renderLehrerTable() {
+        document.getElementById('lehrer-body').innerHTML = DATA.lehrerPlan.map(l => `
+            <tr>
+                <td><b>${l.name}</b><br><small style="color:#666">${l.fach}</small></td>
+                ${[1,2,3,4,5].map(d => {
+                    const times = (l.zeiten[d] || []).filter(z => z[0]).map(z => 
+                        `<div class="${z[2]=='11'?'highlight-11':''}">${z[0]}-${z[1]}</div>`
+                    ).join("");
+                    return `<td>${times || '-'}</td>`;
+                }).join("")}
+            </tr>
         `).join('');
     }
 
-    function renderLehrer() {
-        const today = new Date().getDay();
-        const curMin = new Date().getHours() * 60 + new Date().getMinutes();
-        
-        document.getElementById('lehrer-tbody').innerHTML = DATA.lehrerPlan.map(l => {
-            let times = l.zeiten[today] || [];
-            let isPresent = times.some(z => curMin >= toMin(z[0]) && curMin < toMin(z[1]));
-            
-            let timeString = times.filter(z => z[0]).map(z => 
-                `<span class="${z[2]=='11'?'k11-tag':''}">${z[0]}-${z[1]}</span>`
-            ).join(", ");
-
-            return `
-                <tr>
-                    <td>
-                        <b>${l.name}</b><br>
-                        <small style="color:var(--grey)">${l.fach}</small>
-                    </td>
-                    <td>
-                        ${isPresent ? '<span class="now-badge">JETZT DA</span><br>' : ''}
-                        <div style="font-size:0.75rem; margin-top:3px;">${timeString || 'Kein Dienst'}</div>
-                    </td>
-                </tr>
-            `;
-        }).join('');
-    }
-
-    function tick() {
+    function updateImpuls() {
         const now = new Date();
         const curMin = now.getHours() * 60 + now.getMinutes();
-        const plan = DATA.fullSchedules["11"][now.getDay()] || {};
-        
-        let next = null;
-        Object.keys(plan).sort().forEach(t => { if(toMin(t) > curMin && !next) next = t; });
+        const classes = ["10", "11", "12"];
+        let html = "";
 
-        if(next) {
-            let diff = toMin(next) - curMin;
-            document.getElementById('timer').innerText = diff + " MIN";
-            document.getElementById('next-info').innerText = "Bis: " + plan[next];
-        } else {
-            document.getElementById('timer').innerText = "--";
-            document.getElementById('next-info').innerText = "Keine Stunden mehr";
-        }
-        setTimeout(tick, 30000);
+        classes.forEach(c => {
+            let found = false;
+            // Suche heute & Folgetage
+            for(let offset = 0; offset < 7; offset++) {
+                let d = (now.getDay() + offset) % 7;
+                if(d === 0 || d === 6) continue; // WE überspringen
+
+                const dayPlan = DATA.fullSchedules[c][d] || {};
+                const times = Object.keys(dayPlan).sort();
+
+                for(let t of times) {
+                    if(offset === 0 && toMin(t) <= curMin) continue;
+                    
+                    const dayName = offset === 0 ? "Heute" : (offset === 1 ? "Morgen" : ["So","Mo","Di","Mi","Do","Fr","Sa"][d]);
+                    html += `<div class="impuls-card">
+                                <h3>KLASSE ${c} - ${dayName}</h3>
+                                <div class="timer">${t} Uhr</div>
+                                <div style="color:var(--accent)">${dayPlan[t]}</div>
+                             </div>`;
+                    found = true;
+                    break;
+                }
+                if(found) break;
+            }
+        });
+        document.getElementById('impuls-container').innerHTML = html;
     }
 
     const toMin = t => { if(!t) return 0; const [h,m] = t.split(':').map(Number); return h*60+m; };
